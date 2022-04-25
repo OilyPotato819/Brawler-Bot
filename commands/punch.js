@@ -4,11 +4,8 @@ const { createAudioResource, createAudioPlayer } = require('@discordjs/voice');
 module.exports = {
     name: 'punch',
     description: 'Play punch sound',
-    async execute(message, connection) {
+    async execute(message, args) {
         if (!message.member.voice.channelId) return await message.reply('get in a vc first');
-        if (!message.guild.player) message.guild.player = createAudioPlayer();
-
-        const player = message.guild.player;
 
         const resource = createAudioResource(ytdl('https://youtu.be/BlgrxTVgQao', {
             filter: 'audioonly'

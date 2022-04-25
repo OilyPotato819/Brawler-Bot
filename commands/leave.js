@@ -3,7 +3,7 @@ const { VoiceConnection } = require("@discordjs/voice");
 module.exports = {
     name: 'leave',
     description: 'leave the call',
-    async execute(message, connection) {
+    async execute(message, args) {
         const player = message.guild.player;
 
         if (player.state.status) return message.reply('there is no song to unpause')

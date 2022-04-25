@@ -1,57 +1,61 @@
-const ytdl = require('ytdl-core');
-const ytSearch = require('yt-search');
-const { createAudioResource, createAudioPlayer } = require('@discordjs/voice');
+const { QueryType } = require('discord-player');
 
 module.exports = {
-    name: 'play',
-    description: 'Joins and plays a video from youtube',
-    async execute(message, args, connection) {
-        const query = args.join(' ');
+   name: 'play',
+   aliases: ['p'],
+   description: 'Joins and plays a video from youtube',
+   async execute(message, args) {
+      if (!args[0]) return await message.reply('include what you want to play');
 
-        if (!message.member.voice.channelId) return await message.reply('get in a vc first');
-        if (!query) return await message.reply('include what you want to play');
-        if (!message.guild.player) message.guild.player = createAudioPlayer();
+      const res = await player.search(args.join(' '), {
+         requestedBy: message.member,
+         searchEngine: QueryType.AUTO,
+      });
 
-        const player = message.guild.player;
-        
-        const validURL = (str) => {
-            var regex = /(http|https):\/\/(\w+:{0,1}\w*)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%!\-\/]))?/;
-            if (!regex.test(str)) {
-                return false;
-            } else {
-                return true;
-            }
-        }
+      if (!res || !res.tracks.length) return message.reply('no results found');
 
-        if (validURL(query)) {
-            const getTitle = ytdl.getBasicInfo(query).then(info => {
-                return info.videoDetails.title;
-            })
+      const queue = await player.createQueue(message.guild, {
+         metadata: message.channel,
+      });
 
-            const videoTitle = await getTitle;
-            play(query, videoTitle);
-        } else {
-            const querySearch = await ytSearch(query);
+      try {
+         if (!queue.connection)
+            await queue.connect(message.member.voice.channel);
+      } catch {
+         await player.deleteQueue(message.guild.id);
+         return message.reply('was not able to join your vc');
+      }
 
-            const videos = querySearch.videos.slice(0, 1)
-            videos.forEach(function (v) {
-                play(v.url, v.title);
-            });
-        }
+      message
+         .reply(
+            `**1:** ${res.tracks[0].title} (${res.tracks[0].duration})\n**2:** ${res.tracks[1].title} (${res.tracks[1].duration})\n**3:** ${res.tracks[2].title} (${res.tracks[2].duration})\n**4:** ${res.tracks[3].title} (${res.tracks[3].duration})\n**5:** ${res.tracks[4].title} (${res.tracks[4].duration})`
+         )
+         .then(() => {
+            songChoices = message.channel.lastMessage;
 
-        async function play(link, title) {
-            const resource = createAudioResource(ytdl(link, {
-                filter: 'audioonly'
-            }));
+            client.exeCommands = false;
 
-            player.play(resource, {
-                seek: 0,
-                volume: 1
-            });
+            const filter = (m) =>
+               m.content.includes(client.prefix + (this.name || this.aliases));
 
-            connection.subscribe(player);
-
-            await message.reply(`now playing **${title}**`);
-        }
-    }
-}
+            message.channel
+               .awaitMessages({
+                  filter,
+                  maxProcessed: 1,
+                  time: 10000,
+                  errors: ['time'],
+               })
+               .then(() => {
+                  message.reply('thats crazy you answered');
+                  client.exeCommands = true;
+               })
+               .catch(() => {
+                  message.reply('you took too long');
+                  client.exeCommands = true;
+                  setTimeout(() => {
+                     songChoices.delete();
+                  }, 3000);
+               });
+         });
+   },
+};

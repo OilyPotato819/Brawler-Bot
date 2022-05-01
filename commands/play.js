@@ -26,36 +26,51 @@ module.exports = {
          return message.reply('was not able to join your vc');
       }
 
-      message
-         .reply(
-            `**1:** ${res.tracks[0].title} (${res.tracks[0].duration})\n**2:** ${res.tracks[1].title} (${res.tracks[1].duration})\n**3:** ${res.tracks[2].title} (${res.tracks[2].duration})\n**4:** ${res.tracks[3].title} (${res.tracks[3].duration})\n**5:** ${res.tracks[4].title} (${res.tracks[4].duration})`
-         )
+      let choices = `**1:** ${res.tracks[0].title} (${res.tracks[0].duration})\n`;
+
+      if (!res.tracks[1]) return play();
+
+      if (res.tracks[1]) {
+         choices += `**2:** ${res.tracks[1].title} (${res.tracks[1].duration})\n`;
+      } else if (res.tracks[2]) {
+         choices += `**3:** ${res.tracks[2].title} (${res.tracks[2].duration})\n`;
+      } else if (res.tracks[3]) {
+         choices += `**4:** ${res.tracks[3].title} (${res.tracks[3].duration})\n`;
+      } else if (res.tracks[4]) {
+         choices += `**5:** ${res.tracks[4].title} (${res.tracks[4].duration})`;
+      }
+
+      const filter = (m) =>
+         m.content.includes(client.prefix + (this.name || this.aliases));
+
+      message.channel
+         .awaitMessages({
+            filter,
+            max: 1,
+            time: 10000,
+            errors: ['time'],
+         })
+
          .then(() => {
-            songChoices = message.channel.lastMessage;
+            message.reply('thats crazy you answered');
+         })
 
-            client.exeCommands = false;
-
-            const filter = (m) =>
-               m.content.includes(client.prefix + (this.name || this.aliases));
-
-            message.channel
-               .awaitMessages({
-                  filter,
-                  maxProcessed: 1,
-                  time: 10000,
-                  errors: ['time'],
-               })
-               .then(() => {
-                  message.reply('thats crazy you answered');
-                  client.exeCommands = true;
-               })
-               .catch(() => {
-                  message.reply('you took too long');
-                  client.exeCommands = true;
-                  setTimeout(() => {
-                     songChoices.delete();
-                  }, 3000);
-               });
+         .catch(() => {
+            message.reply('you took too long');
+            setTimeout(() => {
+               songChoices.delete();
+            }, 3000);
          });
+
+      async function play() {
+         message.reply(choices).then(() => {
+            songChoices = message.channel.lastMessage;
+         });
+         res.playlist
+            ? queue.addTracks(res.tracks)
+            : queue.addTrack(res.tracks[0]);
+
+         if (!queue.playing) await queue.play();
+      }
    },
 };

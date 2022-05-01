@@ -8,10 +8,8 @@ const CLIENT_ID = '963636924646576128';
 const GUILD_ID = '785682503968096276';
 
 global.client = new Discord.Client({
-   intents: ['GUILDS', 'GUILD_MESSAGES', 'GUILD_VOICE_STATES'],
+   intents: ['GUILDS', 'GUILD_MESSAGES', 'GUILD_VOICE_STATES', 'GUILD_MEMBERS'],
 });
-
-client.exeCommands = true;
 
 client.login(process.env.DISCORD_TOKEN);
 
@@ -30,7 +28,6 @@ for (const file of commandFiles) {
 
 client.once('ready', () => {
    console.log(`Logged in as ${client.user.tag}`);
-   cageChannel = client.channels.cache.get('964690435727577158');
 });
 
 client.on('messageCreate', (message) => {
@@ -43,10 +40,14 @@ client.on('messageCreate', (message) => {
 
    const cmd =
       client.commands.get(command) ||
-      client.commands.find((cmd) => cmd.aliases);
+      client.commands.find(
+         (cmd) => cmd.aliases && cmd.aliases.includes(command)
+      );
 
-   if (client.exeCommands) {
+   if (cmd) {
       cmd.execute(message, args);
+   } else {
+      message.reply('not a command stupid');
    }
 });
 

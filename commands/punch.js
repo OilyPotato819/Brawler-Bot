@@ -1,27 +1,30 @@
-const ytdl = require('ytdl-core');
-const { createAudioResource, createAudioPlayer } = require('@discordjs/voice');
+const { QueryType } = require('discord-player');
 
 module.exports = {
-    name: 'punch',
-    description: 'Play punch sound',
-    async execute(message, args) {
-        if (!message.member.voice.channelId) return await message.reply('get in a vc first');
+   name: 'punch',
+   description: 'Play punch sound',
+   async execute(message, args) {
+      const res = await player.search('https://youtu.be/BlgrxTVgQao', {
+         requestedBy: message.member,
+         searchEngine: QueryType.AUTO,
+      });
 
-        const resource = createAudioResource(ytdl('https://youtu.be/BlgrxTVgQao', {
-            filter: 'audioonly'
-        }));
+      const queue = await player.createQueue(message.guild, {
+         metadata: message.channel,
+      });
 
-        player.play(resource, {
-            seek: 0,
-            volume: 1
-        });
+      try {
+         if (!queue.connection)
+            await queue.connect(message.member.voice.channel);
+      } catch {
+         await player.deleteQueue(message.guild.id);
+         return message.reply('was not able to join your vc');
+      }
 
-        connection.subscribe(player);
+      res.playlist
+         ? queue.addTracks(res.tracks)
+         : queue.addTrack(res.tracks[0]);
 
-        player.punching = true;
-
-        player.addListener('stateChange', () => {
-            if (player.state.status === 'idle') player.punching = false;
-        });
-    }
-}
+      if (!queue.playing) await queue.play();
+   },
+};

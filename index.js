@@ -28,6 +28,8 @@ for (const file of commandFiles) {
 
 client.once('ready', () => {
    console.log(`Logged in as ${client.user.tag}`);
+
+   client.connections = [];
 });
 
 client.on('messageCreate', (message) => {

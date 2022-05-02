@@ -1,10 +1,10 @@
 module.exports = {
    name: 'cancelvote',
-   description: 'cancel your vote for shush or unshush',
+   description: 'cancel your vote for silence or unsilence',
    async execute(message, args) {
-      if (!client.shushVotes) return message.reply("you don't have any votes");
+      if (!client.silenceVotes) return message.reply("you don't have any votes");
 
-      const voteIndex = client.shushVotes.findIndex((obj) => {
+      const voteIndex = client.silenceVotes.findIndex((obj) => {
          return (
             obj.voted &&
             obj.voted.includes(message.author.id) &&
@@ -12,18 +12,18 @@ module.exports = {
          );
       });
 
-      client.shushVotes[voteIndex].votes--;
+      client.silenceVotes[voteIndex].votes--;
 
-      const thisShushVote = client.shushVotes[voteIndex];
+      const thisSilenceVote = client.silenceVotes[voteIndex];
 
-      const votedIndex = thisShushVote.voted.findIndex((obj) => {
+      const votedIndex = thisSilenceVote.voted.findIndex((obj) => {
          return obj.includes(message.author.id);
       });
 
-      client.shushVotes[voteIndex].voted.splice(votedIndex);
+      client.silenceVotes[voteIndex].voted.splice(votedIndex);
 
       message.reply(
-         `${thisShushVote.votes}/2 votes to shush ${thisShushVote.target} in ${thisShushVote.channelName}`
+         `${thisSilenceVote.votes}/2 votes to silence ${thisSilenceVote.target} in ${thisSilenceVote.channelName}`
       );
    },
 };

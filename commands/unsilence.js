@@ -1,19 +1,19 @@
 module.exports = {
-   name: 'unshush',
-   description: 'unshush member',
+   name: 'unsilence',
+   description: 'unsilence member',
    async execute(message, args) {
       const thisConnection = client.connections.find((obj) => {
          return obj.serverName === message.guild.name;
       });
 
-      if (!thisConnection || !thisConnection.shushing) {
-         return message.reply('no one is being shushed rn');
+      if (!thisConnection || !thisConnection.silencing) {
+         return message.reply('no one is being silenceed rn');
       }
 
-      if (!args[0]) return message.reply('include who you want to shush');
+      if (!args[0]) return message.reply('include who you want to silence');
 
-      if (thisConnection.shushing.includes(`<@${message.author.id}>`)) {
-         return message.reply("lol you can't unshush yourself");
+      if (thisConnection.silencing.includes(`<@${message.author.id}>`)) {
+         return message.reply("lol you can't unsilence yourself");
       }
 
       for (let i = 0; i < args.length; i++) {
@@ -29,11 +29,11 @@ module.exports = {
             return message.reply(`${args[i]} is not a valid user`);
          }
 
-         const indexOfTarget = thisConnection.shushing.indexOf(args[i]);
+         const indexOfTarget = thisConnection.silencing.indexOf(args[i]);
 
-         thisConnection.shushing.splice(indexOfTarget);
+         thisConnection.silencing.splice(indexOfTarget);
 
-         return message.reply(`unshushed ${args[i]}`);
+         return message.reply(`unsilenceed ${args[i]}`);
       }
    },
 };

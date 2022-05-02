@@ -1,39 +1,43 @@
 const { joinVoiceChannel } = require('@discordjs/voice');
 
 module.exports = {
-   name: 'shush',
+   name: 'silence',
    description: 'kick target whenever they speak',
    async execute(message, args) {
-      if (!args[0]) return await message.reply('include who you want to shush');
+      if (!args[0]) return await message.reply('include who you want to silence');
 
       if (args[1]) {
-         return await message.reply('you can only shush one person at a time');
+         return await message.reply('you can only silence one person at a time');
       }
 
       if (!message.mentions) {
          return message.reply(`${args[0]} is not a valid user`);
       }
 
-      if (message.mentions.users.values().next().value.bot) {
-         return message.reply("you can't shush a bot");
+      const userMentioned = message.mentions.users.values().next().value;
+
+      if (userMentioned.id === client.user.id) console.log('yes');
+
+      if (userMentioned.bot) {
+         return message.reply("you can't silence a bot");
       }
 
       if (!message.member.voice.channel) {
          return message.reply('you need to be in a vc');
       }
 
-      if (!client.shushVotes) {
-         client.shushVotes = [];
+      if (!client.silenceVotes) {
+         client.silenceVotes = [];
       }
 
-      function getShushVotes() {
-         return client.shushVotes.find((obj) => {
+      function getSilenceVotes() {
+         return client.silenceVotes.find((obj) => {
             return obj.channelName === message.member.voice.channel.name && obj.target === args[0];
          });
       }
 
-      if (!getShushVotes()) {
-         client.shushVotes.push(
+      if (!getSilenceVotes()) {
+         client.silenceVotes.push(
             (channel = {
                channelName: message.member.voice.channel.name,
                serverName: message.guild.name,
@@ -44,7 +48,7 @@ module.exports = {
       }
 
       if (
-         client.shushVotes.find((obj) => {
+         client.silenceVotes.find((obj) => {
             return (
                obj.voted &&
                obj.voted.includes(message.author.id) &&
@@ -57,27 +61,27 @@ module.exports = {
          );
       }
 
-      const shushIndex = client.shushVotes.findIndex((obj) => {
+      const silenceIndex = client.silenceVotes.findIndex((obj) => {
          return obj.channelName === message.member.voice.channel.name;
       });
 
-      client.shushVotes[shushIndex].votes++;
+      client.silenceVotes[silenceIndex].votes++;
 
-      client.shushVotes[shushIndex].voted = [message.author.id];
+      client.silenceVotes[silenceIndex].voted = [message.author.id];
 
-      const thisShushVote = getShushVotes();
+      const thisSilenceVote = getSilenceVotes();
 
       message.reply(
-         `${thisShushVote.votes}/2 votes to shush ${thisShushVote.target} in ${thisShushVote.channelName}`
+         `${thisSilenceVote.votes}/2 votes to silence ${thisSilenceVote.target} in ${thisSilenceVote.channelName}`
       );
 
-      if (thisShushVote.votes < 2) {
+      if (thisSilenceVote.votes < 2) {
          return;
       }
 
-      client.shushVotes[shushIndex].voted = [];
+      client.silenceVotes[silenceIndex].voted = [];
 
-      client.shushVotes[shushIndex].votes = 0;
+      client.silenceVotes[silenceIndex].votes = 0;
 
       function findConnection() {
          return client.connections.find((obj) => {
@@ -99,9 +103,9 @@ module.exports = {
             connection.serverName = message.guild.name;
          }
 
-         if (!connection.shushing) connection.shushing = [];
+         if (!connection.silencing) connection.silencing = [];
 
-         connection.shushing.push(args[0]);
+         connection.silencing.push(args[0]);
 
          client.connections.push(connection);
       } catch (error) {
@@ -109,12 +113,12 @@ module.exports = {
          return message.reply('could not join vc');
       }
 
-      message.reply(`shushing ${args[0]}`);
+      message.reply(`silencing ${args[0]}`);
 
       const thisConnection = findConnection();
 
       thisConnection.receiver.speaking.on('start', (userId) => {
-         if (thisConnection.shushing.includes(`<@${userId}>`)) {
+         if (thisConnection.silencing.includes(`<@${userId}>`)) {
             message.guild.members.cache.get(userId).voice.disconnect();
          }
       });

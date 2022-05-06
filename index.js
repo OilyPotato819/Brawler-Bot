@@ -34,7 +34,12 @@ client.on('messageCreate', (message) => {
    if (message.author.bot) return;
 
    if (!message.content.startsWith(client.prefix)) {
-      const possibleResponses = ['tru', "that's literally how it be", 'fo real'];
+      const possibleResponses = [
+         'tru',
+         "that's literally how it be",
+         'fo real',
+         'https://cdn.discordapp.com/attachments/811429087775424613/971977417805676604/333341C4-2548-4C46-B883-3B9BAF9D0ED3.jpg',
+      ];
 
       const randNum = Math.floor(Math.random() * possibleResponses.length);
 

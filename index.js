@@ -17,9 +17,7 @@ client.prefix = '!';
 
 client.commands = new Discord.Collection();
 
-const commandFiles = fs
-   .readdirSync('./commands/')
-   .filter((file) => file.endsWith('.js'));
+const commandFiles = fs.readdirSync('./commands/').filter((file) => file.endsWith('.js'));
 for (const file of commandFiles) {
    const command = require(`./commands/${file}`);
 
@@ -33,7 +31,17 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', (message) => {
-   if (!message.content.startsWith(client.prefix) || message.author.bot) return;
+   if (message.author.bot) return;
+
+   if (!message.content.startsWith(client.prefix)) {
+      const possibleResponses = ['tru', "that's literally how it be", 'fo real'];
+
+      const randNum = Math.floor(Math.random() * possibleResponses.length);
+
+      const randomResponse = possibleResponses[randNum];
+
+      return message.reply(randomResponse);
+   }
 
    global.player = new Player(client);
 
@@ -42,9 +50,7 @@ client.on('messageCreate', (message) => {
 
    const cmd =
       client.commands.get(command) ||
-      client.commands.find(
-         (cmd) => cmd.aliases && cmd.aliases.includes(command)
-      );
+      client.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(command));
 
    if (cmd) {
       cmd.execute(message, args);

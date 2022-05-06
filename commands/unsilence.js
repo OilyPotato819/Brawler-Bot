@@ -7,12 +7,12 @@ module.exports = {
       });
 
       if (!thisConnection || !thisConnection.silencing) {
-         return message.reply('no one is being silenceed rn');
+         return message.reply('no one is being silenced rn');
       }
 
       if (!args[0]) return message.reply('include who you want to silence');
 
-      if (thisConnection.silencing.includes(`<@${message.author.id}>`)) {
+      if (thisConnection.silencing.includes(`${message.author.id}`)) {
          return message.reply("lol you can't unsilence yourself");
       }
 
@@ -33,7 +33,7 @@ module.exports = {
 
          thisConnection.silencing.splice(indexOfTarget);
 
-         return message.reply(`unsilenceed ${args[i]}`);
+         return message.reply(`unsilenced ${args[i]}`);
       }
    },
 };

@@ -12,7 +12,7 @@
       "yt-search": "^2.10.3",
       "ytdl-core": "^4.11.0"
    },
-   "name": "Brawler-Bot",
+   "name": "brawler-bot",
    "description": "brawler discord bot",
    "version": "1.0.0",
    "main": "index.js",

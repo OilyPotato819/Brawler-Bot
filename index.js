@@ -34,12 +34,38 @@ client.on('messageCreate', (message) => {
    if (message.author.bot) return;
 
    if (!message.content.startsWith(client.prefix)) {
-      const possibleResponses = [
-         'tru',
-         "that's literally how it be",
-         'fo real',
-         'https://cdn.discordapp.com/attachments/811429087775424613/971977417805676604/333341C4-2548-4C46-B883-3B9BAF9D0ED3.jpg',
-      ];
+      let possibleResponses;
+
+      if (message.content.endsWith('?')) {
+         possibleResponses = [
+            'it is certain',
+            'it is decidedly so',
+            'without a doubt',
+            'yes definitely',
+            'you may rely on it',
+            'as I see it, yes',
+            'most likely',
+            'outlook good',
+            'yes',
+            'signs point to yes',
+            'your brain is stupid, try again',
+            "don't count on it",
+            'my reply is no',
+            'my sources say no',
+            'outlook not so good',
+            'very doubtful',
+            'probably',
+            'perhaps',
+            'https://cdn.discordapp.com/attachments/811429087775424613/971977417805676604/333341C4-2548-4C46-B883-3B9BAF9D0ED3.jpg',
+         ];
+      } else {
+         possibleResponses = [
+            'tru',
+            "that's literally how it be",
+            'fo real',
+            'https://cdn.discordapp.com/attachments/811429087775424613/971977417805676604/333341C4-2548-4C46-B883-3B9BAF9D0ED3.jpg',
+         ];
+      }
 
       const randNum = Math.floor(Math.random() * possibleResponses.length);
 

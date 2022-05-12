@@ -6,10 +6,6 @@ module.exports = {
    async execute(message, args) {
       if (!args[0]) return await message.reply('include who you want to silence');
 
-      if (args[1]) {
-         return await message.reply('you can only silence one person at a time');
-      }
-
       const userMentioned = message.mentions.users.values().next().value;
 
       if (!message.mentions || !userMentioned) {

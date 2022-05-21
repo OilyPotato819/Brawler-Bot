@@ -4,16 +4,25 @@ module.exports = {
    name: 'play',
    aliases: ['p'],
    description: 'Joins and plays a video from youtube',
+   interactions: [],
    async execute(message, args) {
-      if (!this.interactions) this.interactions = [];
+      function findIndex(interactions) {
+         return interactions.findIndex(
+            (element) =>
+               element.authorId === message.author.id && element.channelId === message.channel.id
+         );
+      }
 
-      interactionFound = this.interactions.find(
-         (element) =>
-            element.authorId === message.author.id && element.channelId === message.channel.id
-      );
+      function deleteInteraction(interactions) {
+         interactions[findIndex(interactions)].songChoices.delete();
 
-      if (interactionFound && !(message.content <= 5 && message.content >= 1)) {
-         return;
+         interactions.splice(findIndex(interactions), 1);
+      }
+
+      if (findIndex(this.interactions) != -1 && !(message.content <= 5 && message.content >= 1)) {
+         deleteInteraction(this.interactions);
+
+         return this.execute(message, args);
       }
 
       if (!args[0]) return await message.reply('include what you want to play');
@@ -44,16 +53,19 @@ module.exports = {
 
       if (res.tracks[1]) {
          choicesString += `**2:** ${res.tracks[1].title} (${res.tracks[1].duration})\n`;
-      } else if (res.tracks[2]) {
+      }
+      if (res.tracks[2]) {
          choicesString += `**3:** ${res.tracks[2].title} (${res.tracks[2].duration})\n`;
-      } else if (res.tracks[3]) {
+      }
+      if (res.tracks[3]) {
          choicesString += `**4:** ${res.tracks[3].title} (${res.tracks[3].duration})\n`;
-      } else if (res.tracks[4]) {
+      }
+      if (res.tracks[4]) {
          choicesString += `**5:** ${res.tracks[4].title} (${res.tracks[4].duration})`;
       }
 
       message.reply(choicesString).then(() => {
-         songChoices = message.channel.lastMessage;
+         this.interactions[findIndex(this.interactions)].songChoices = message.channel.lastMessage;
       });
 
       const filter = (m) =>
@@ -65,7 +77,7 @@ module.exports = {
          .awaitMessages({
             filter,
             max: 1,
-            time: 10000,
+            time: 1000,
             errors: ['time'],
          })
 
@@ -75,7 +87,10 @@ module.exports = {
 
          .catch((error) => {
             message.reply('you took too long');
-            songChoices.delete();
+
+            deleteInteraction(this.interactions);
+
+            console.log(this);
          });
 
       async function play() {

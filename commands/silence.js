@@ -3,6 +3,7 @@ const { joinVoiceChannel } = require('@discordjs/voice');
 module.exports = {
    name: 'silence',
    description: 'kick target whenever they speak',
+   silenceVotes: [],
    async execute(message, args) {
       if (!args[0]) return await message.reply('include who you want to silence');
 
@@ -16,29 +17,27 @@ module.exports = {
          return message.reply('you need to be in a vc');
       }
 
-      if (message.author.id === '664646572566511653') {
-         return message.reply('no shut up michael');
-      }
+      // if (message.author.id === '664646572566511653') {
+      //    return message.reply('no shut up michael');
+      // }
 
-      if (message.author.id === '465298168675041300') {
-         return message.reply('no shut up xander');
-      }
+      // if (message.author.id === '465298168675041300') {
+      //    return message.reply('no shut up xander');
+      // }
 
       if (userMentioned.id === client.user.id) {
          args[0] = `<@${message.author.id}>`;
 
          message.reply('you dare attempt to silence me?');
-      } else if (userMentioned.bot) {
-         voteHandler();
 
+         connect();
+      } else if (userMentioned.bot) {
          return message.reply("you can't silence a bot");
+      } else {
+         voteHandler();
       }
 
       function voteHandler() {
-         if (!client.silenceVotes) {
-            client.silenceVotes = [];
-         }
-
          function getSilenceVotes() {
             return client.silenceVotes.find((obj) => {
                return (
@@ -83,54 +82,58 @@ module.exports = {
          const thisSilenceVote = getSilenceVotes();
 
          message.reply(
-            `${thisSilenceVote.votes}/1 votes to silence ${thisSilenceVote.target} in ${thisSilenceVote.channelName}`
+            `${thisSilenceVote.votes}/2 votes to silence ${thisSilenceVote.target} in ${thisSilenceVote.channelName}`
          );
 
-         if (thisSilenceVote.votes < 1) {
+         if (thisSilenceVote.votes < 2) {
             return;
          }
 
-         client.silenceVotes.splice(silenceIndex);
+         client.silenceVotes.splice(silenceIndex, 1);
+
+         connect();
       }
 
-      function findConnection() {
-         return client.connections.find((obj) => {
-            return obj.serverName === message.guild.name;
+      function connect() {
+         function findConnection() {
+            return client.connections.find((obj) => {
+               return obj.serverName === message.guild.name;
+            });
+         }
+
+         try {
+            let connection = findConnection();
+
+            if (!connection) {
+               connection = joinVoiceChannel({
+                  channelId: message.member.voice.channel.id,
+                  guildId: message.channel.guild.id,
+                  adapterCreator: message.channel.guild.voiceAdapterCreator,
+                  selfDeaf: false,
+               });
+
+               connection.serverName = message.guild.name;
+            }
+
+            if (!connection.silencing) connection.silencing = [];
+
+            connection.silencing.push(args[0].replace(/<|@|>/g, ''));
+
+            client.connections.push(connection);
+         } catch (error) {
+            console.log(error);
+            return message.reply('could not join vc');
+         }
+
+         message.reply(`silencing ${args[0]}`);
+
+         const thisConnection = findConnection();
+
+         thisConnection.receiver.speaking.on('start', (userId) => {
+            if (thisConnection.silencing.includes(`${userId}`)) {
+               message.guild.members.cache.get(userId).voice.disconnect();
+            }
          });
       }
-
-      try {
-         let connection = findConnection();
-
-         if (!connection) {
-            connection = joinVoiceChannel({
-               channelId: message.member.voice.channel.id,
-               guildId: message.channel.guild.id,
-               adapterCreator: message.channel.guild.voiceAdapterCreator,
-               selfDeaf: false,
-            });
-
-            connection.serverName = message.guild.name;
-         }
-
-         if (!connection.silencing) connection.silencing = [];
-
-         connection.silencing.push(args[0].replace(/<|@|>/g, ''));
-
-         client.connections.push(connection);
-      } catch (error) {
-         console.log(error);
-         return message.reply('could not join vc');
-      }
-
-      message.reply(`silencing ${args[0]}`);
-
-      const thisConnection = findConnection();
-
-      thisConnection.receiver.speaking.on('start', (userId) => {
-         if (thisConnection.silencing.includes(`${userId}`)) {
-            message.guild.members.cache.get(userId).voice.disconnect();
-         }
-      });
    },
 };

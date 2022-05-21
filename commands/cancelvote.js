@@ -12,7 +12,7 @@ module.exports = {
          );
       });
 
-      client.silenceVotes[voteIndex].votes--;
+      if (voteIndex === -1) return message.reply("you don't have any votes");
 
       const thisSilenceVote = client.silenceVotes[voteIndex];
 
@@ -20,7 +20,13 @@ module.exports = {
          return obj.includes(message.author.id);
       });
 
-      client.silenceVotes[voteIndex].voted.splice(votedIndex);
+      client.silenceVotes[voteIndex].voted.splice(votedIndex, 1);
+
+      client.silenceVotes[voteIndex].votes--;
+
+      if (client.silenceVotes[voteIndex].votes === 0) {
+         client.silenceVotes.splice(voteIndex, 1);
+      }
 
       message.reply(
          `${thisSilenceVote.votes}/2 votes to silence ${thisSilenceVote.target} in ${thisSilenceVote.channelName}`

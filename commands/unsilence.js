@@ -31,7 +31,7 @@ module.exports = {
 
          const indexOfTarget = thisConnection.silencing.indexOf(args[i]);
 
-         thisConnection.silencing.splice(indexOfTarget);
+         thisConnection.silencing.splice(indexOfTarget, 1);
 
          return message.reply(`unsilenced ${args[i]}`);
       }

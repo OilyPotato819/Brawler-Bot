@@ -33,6 +33,8 @@ client.once('ready', () => {
 client.on('messageCreate', (message) => {
    if (message.author.bot) return;
 
+   console.log(message.member.displayAvatarURL());
+
    if (!message.content.startsWith(client.prefix)) {
       let possibleResponses;
 

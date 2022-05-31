@@ -13,14 +13,16 @@ module.exports = {
          selfDeaf: false,
       });
 
-      let player = createAudioPlayer();
+      // let player = createAudioPlayer();
 
       const audio = connection.receiver.subscribe(message.author.id);
 
-      let resource = createAudioResource(audio);
+      // audio.pipe(fs.createWriteStream('user_audio'));
 
-      player.play(resource);
+      // let resource = createAudioResource(audio);
 
-      console.log(player);
+      // player.play(resource);
+
+      // console.log(player);
    },
 };

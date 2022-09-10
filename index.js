@@ -3,9 +3,14 @@ const fs = require('fs');
 const { joinVoiceChannel } = require('@discordjs/voice');
 const { Player } = require('discord-player');
 require('dotenv').config();
+const { spawn } = require('child_process');
 
 const CLIENT_ID = '963636924646576128';
 const GUILD_ID = '785682503968096276';
+
+oliBot.stdout.on('data', () => {
+   console.log(`stdout:\n${data}`);
+});
 
 global.client = new Discord.Client({
    intents: ['GUILDS', 'GUILD_MESSAGES', 'GUILD_VOICE_STATES', 'GUILD_MEMBERS'],

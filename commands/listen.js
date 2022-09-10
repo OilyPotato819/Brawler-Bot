@@ -1,6 +1,6 @@
 const fs = require('fs');
 const { joinVoiceChannel, createAudioResource, createAudioPlayer } = require('@discordjs/voice');
-const ffmpeg = require('ffmpeg');
+const Meyda = require('meyda');
 
 module.exports = {
    name: 'listen',
@@ -15,9 +15,11 @@ module.exports = {
 
       // let player = createAudioPlayer();
 
-      const audio = connection.receiver.subscribe(message.author.id);
+      const audio = connection.receiver.subscribe('465298168675041300');
 
-      // audio.pipe(fs.createWriteStream('user_audio'));
+      audio.on('data', (opusPacket) => {
+         connection.playOpusPacket(opusPacket);
+      });
 
       // let resource = createAudioResource(audio);
 

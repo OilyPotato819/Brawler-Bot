@@ -1,4 +1,5 @@
 const { joinVoiceChannel } = require('@discordjs/voice');
+const prism = require('prism-media');
 
 module.exports = {
    name: 'silence',
@@ -134,6 +135,64 @@ module.exports = {
                message.guild.members.cache.get(userId).voice.disconnect();
             }
          });
+
+         function subscribe(userId, guildId) {
+            let audio = bot1Bot.connection.receiver.subscribe(userId);
+
+            const opusDecoder = new prism.opus.Decoder({
+               frameSize: 960,
+               channels: 2,
+               rate: 48000,
+            });
+
+            audio.pipe(opusDecoder);
+
+            opusDecoder.on('data', (chunk) => {
+               const wordAmount = Buffer.byteLength(chunk) / 2;
+
+               let chunkIndex = 0;
+               for (let word = 0; word < wordAmount; word++, chunkIndex += 2) {
+                  const hex0 = chunk[0 + chunkIndex].toString(16).padStart(2, '0');
+                  const hex1 = chunk[1 + chunkIndex].toString(16).padStart(2, '0');
+
+                  const hex = `0x${hex1}${hex0}`;
+                  const amplitude = +hex > 0x7fff ? +hex - 0x10000 : +hex;
+
+                  const limit = 26 * 1000;
+                  if (amplitude > limit || amplitude < -limit) {
+                     opusDecoder.destroy();
+                     const guild = bot1Bot.client.guilds.cache.get(guildId);
+                     return guild.members.cache.get(userId).voice.disconnect();
+                  }
+               }
+            });
+         }
+
+         if (!bot1Bot.connection) return;
+
+         const subscriptions = bot1Bot.connection.receiver.subscriptions;
+
+         if (newState.id === bot1Bot.client.user.id) {
+            subscribe(targetId, newState.guild.id);
+            //    newState.channel.members.forEach((member) => {
+            //       // if (member.user.bot) return;
+            //       if (member.id === bot1Bot.client.user.id) return;
+
+            //       subscribe(member.user.id, newState.guild.id);
+            //    });
+         } else if (
+            newState.channelId === bot1Bot.voiceId &&
+            !newState.member.user.bot &&
+            newState.member.user.id == targetId
+         ) {
+            subscribe(newState.member.id, newState.guild.id);
+         } else if (
+            subscriptions.size > 0 &&
+            oldState.channelId === bot1Bot.voiceId &&
+            newState.channelId != bot1Bot.voiceId
+         ) {
+            subscriptions.get(newState.member.id).destroy();
+         }
       }
    },
 };

@@ -1,102 +1,121 @@
-const { QueryType } = require('discord-player');
+const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
-   name: 'play',
-   aliases: ['p'],
-   description: 'Joins and plays a video from youtube',
-   interactions: [],
-   async execute(message, args) {
-      function findIndex(interactions) {
-         return interactions.findIndex(
-            (element) =>
-               element.authorId === message.author.id && element.channelId === message.channel.id
-         );
-      }
+   data: new SlashCommandBuilder()
+      .setName('play')
+      .setDescription('play a song')
+      .addStringOption((option) =>
+         option.setName('input').setDescription('link or song name').setRequired(true)
+      ),
+   async execute(interaction) {
+      const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Events } = require('discord.js');
+      const fs = require('fs');
+      const ytdl = require('ytdl-core');
+      const axios = require('axios');
 
-      function deleteInteraction(interactions) {
-         interactions[findIndex(interactions)].songChoices.delete();
+      const key = process.env.YOUTUBE_KEY;
 
-         interactions.splice(findIndex(interactions), 1);
-      }
+      const input = interaction.options.getString('input');
+      let url;
 
-      if (findIndex(this.interactions) != -1 && !(message.content <= 5 && message.content >= 1)) {
-         deleteInteraction(this.interactions);
+      if (isValidUrl(input)) {
+         url = input;
+      } else {
+         //  axios
+         //     .get(
+         //        `https://www.googleapis.com/youtube/v3/search?key=${key}&type=video&part=snippet&maxResults=5&q=${input}`
+         //     )
+         //     .then((response) => {
+         //        console.log(response.data);
+         //     })
+         //     .catch((error) => {
+         //        console.log(error);
+         //     });
 
-         return this.execute(message, args);
-      }
+         let results = ['1', '2', '3', '4', '5'];
+         let rows = [];
 
-      if (!args[0]) return await message.reply('include what you want to play');
+         for (let i = 0; i < results.length; i++) {
+            rows.push(
+               new ActionRowBuilder().addComponents(
+                  new ButtonBuilder()
+                     .setCustomId(i.toString())
+                     .setLabel((i + 1).toString())
+                     .setStyle(ButtonStyle.Primary)
+               )
+            );
+         }
 
-      const res = await player.search(args.join(' '), {
-         requestedBy: message.member,
-         searchEngine: QueryType.AUTO,
-      });
+         const embed = {
+            color: 0x0099ff,
+            fields: [
+               {
+                  name: 'title',
+                  value: 'author',
+               },
+               {
+                  name: '',
+                  value: '',
+                  inline: false,
+               },
+               {
+                  name: 'title',
+                  value: 'author',
+               },
+               {
+                  name: '',
+                  value: '',
+                  inline: false,
+               },
+               {
+                  name: 'title',
+                  value: 'author',
+               },
+               {
+                  name: '',
+                  value: '',
+                  inline: false,
+               },
+               {
+                  name: 'title',
+                  value: 'author',
+               },
+               {
+                  name: '',
+                  value: '',
+                  inline: false,
+               },
+               {
+                  name: 'title',
+                  value: 'author',
+               },
+            ],
+         };
 
-      if (!res || !res.tracks.length) return message.reply('no results found');
-
-      const queue = await player.createQueue(message.guild, {
-         metadata: message.channel,
-      });
-
-      try {
-         if (!queue.connection) await queue.connect(message.member.voice.channel);
-      } catch {
-         await player.deleteQueue(message.guild.id);
-         return message.reply('was not able to join your vc');
-      }
-
-      this.interactions.push({ authorId: message.author.id, channelId: message.channel.id });
-
-      let choicesString = `**1:** ${res.tracks[0].title} (${res.tracks[0].duration})\n`;
-
-      if (!res.tracks[1]) return play();
-
-      if (res.tracks[1]) {
-         choicesString += `**2:** ${res.tracks[1].title} (${res.tracks[1].duration})\n`;
-      }
-      if (res.tracks[2]) {
-         choicesString += `**3:** ${res.tracks[2].title} (${res.tracks[2].duration})\n`;
-      }
-      if (res.tracks[3]) {
-         choicesString += `**4:** ${res.tracks[3].title} (${res.tracks[3].duration})\n`;
-      }
-      if (res.tracks[4]) {
-         choicesString += `**5:** ${res.tracks[4].title} (${res.tracks[4].duration})`;
-      }
-
-      message.reply(choicesString).then(() => {
-         this.interactions[findIndex(this.interactions)].songChoices = message.channel.lastMessage;
-      });
-
-      const filter = (m) =>
-         m.content.includes(client.prefix + (this.name || this.aliases)) &&
-         m.content <= 5 &&
-         m.content >= 1;
-
-      message.channel
-         .awaitMessages({
-            filter,
-            max: 1,
-            time: 1000,
-            errors: ['time'],
-         })
-
-         .then(() => {
-            message.reply('thats crazy you answered');
-         })
-
-         .catch((error) => {
-            message.reply('you took too long');
-
-            deleteInteraction(this.interactions);
-
-            console.log(this);
+         await interaction.reply({
+            ephemeral: true,
+            components: [rows[0], rows[1], rows[2], rows[3], rows[4]],
+            embeds: [embed],
          });
 
-      async function play() {
-         res.playlist ? queue.addTracks(res.tracks) : queue.addTrack(res.tracks[0]);
-
-         if (!queue.playing) await queue.play();
+         interaction.client.on(Events.InteractionCreate, (buttonPress) => {
+            if (!buttonPress.isButton()) return;
+            console.log(buttonPress.customId);
+         });
       }
+
+      function isValidUrl(string) {
+         let url;
+         try {
+            url = new URL(string);
+         } catch (_) {
+            return false;
+         }
+         return true;
+      }
+
+      //   await interaction.reply('playing ' + input);
+
+      //   ytdl('http://www.youtube.com/watch?v=aqz-KE-bpKQ').pipe(fs.createWriteStream('video.mp4'));
    },
 };

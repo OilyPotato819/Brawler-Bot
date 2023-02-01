@@ -1,102 +1,55 @@
-const Discord = require('discord.js');
-const fs = require('fs');
-const { joinVoiceChannel } = require('@discordjs/voice');
-const { Player } = require('discord-player');
+// const { deleteCommands } = require('./deploy-commands');
+// deleteCommands();
+
+const { deployCommands } = require('./deploy-commands');
+deployCommands();
+
+const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
-const { spawn } = require('child_process');
+const fs = require('node:fs');
+const path = require('node:path');
 
-const CLIENT_ID = '963636924646576128';
-const GUILD_ID = '785682503968096276';
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const token = process.env.TOKEN;
+client.commands = new Collection();
 
-oliBot.stdout.on('data', () => {
-   console.log(`stdout:\n${data}`);
-});
+const commandsPath = path.join(__dirname, 'commands');
+const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'));
 
-global.client = new Discord.Client({
-   intents: ['GUILDS', 'GUILD_MESSAGES', 'GUILD_VOICE_STATES', 'GUILD_MEMBERS'],
-});
-
-client.login(process.env.DISCORD_TOKEN);
-
-client.prefix = '!';
-
-client.commands = new Discord.Collection();
-
-const commandFiles = fs.readdirSync('./commands/').filter((file) => file.endsWith('.js'));
 for (const file of commandFiles) {
-   const command = require(`./commands/${file}`);
-
-   client.commands.set(command.name, command);
+   const filePath = path.join(commandsPath, file);
+   const command = require(filePath);
+   // Set a new item in the Collection with the key as the command name and the value as the exported module
+   if ('data' in command && 'execute' in command) {
+      client.commands.set(command.data.name, command);
+   } else {
+      console.log(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+   }
 }
 
-client.once('ready', () => {
-   console.log(`Logged in as ${client.user.tag}`);
+client.on(Events.InteractionCreate, async (interaction) => {
+   if (!interaction.isChatInputCommand()) return;
 
-   client.connections = [];
-});
+   const command = interaction.client.commands.get(interaction.commandName);
 
-client.on('messageCreate', (message) => {
-   if (message.author.bot) return;
-
-   if (!message.content.startsWith(client.prefix)) {
-      let possibleResponses;
-
-      if (message.content.endsWith('?')) {
-         possibleResponses = [
-            'it is certain',
-            'it is decidedly so',
-            'without a doubt',
-            'yes definitely',
-            'you may rely on it',
-            'as I see it, yes',
-            'most likely',
-            'outlook good',
-            'yes',
-            'signs point to yes',
-            'your brain is stupid, try again',
-            "don't count on it",
-            'my reply is no',
-            'my sources say no',
-            'outlook not so good',
-            'very doubtful',
-            'probably',
-            'perhaps',
-            'https://cdn.discordapp.com/attachments/811429087775424613/971977417805676604/333341C4-2548-4C46-B883-3B9BAF9D0ED3.jpg',
-         ];
-      } else {
-         possibleResponses = [
-            'tru',
-            "that's literally how it be",
-            'fo real',
-            'https://cdn.discordapp.com/attachments/811429087775424613/971977417805676604/333341C4-2548-4C46-B883-3B9BAF9D0ED3.jpg',
-            'have you seen the duck image?',
-         ];
-      }
-
-      const randNum = Math.floor(Math.random() * possibleResponses.length);
-
-      const randomResponse = possibleResponses[randNum];
-
-      return message.reply(randomResponse);
+   if (!command) {
+      console.error(`No command matching ${interaction.commandName} was found.`);
+      return;
    }
 
-   global.player = new Player(client);
-
-   const args = message.content.slice(client.prefix.length).split(/ +/);
-   const command = args.shift().toLowerCase();
-
-   const cmd =
-      client.commands.get(command) ||
-      client.commands.find((cmd) => cmd.aliases && cmd.aliases.includes(command));
-
-   if (cmd) {
-      cmd.execute(message, args);
-   } else {
-      message.reply('not a command stupid');
+   try {
+      await command.execute(interaction);
+   } catch (error) {
+      console.error(error);
+      await interaction.reply({
+         content: 'There was an error while executing this command!',
+         ephemeral: true,
+      });
    }
 });
 
-// const a = new Player(client)
-// a.
-// const queue = a.createQueue()
-// queue.
+client.on('ready', () => {
+   console.log(`Logged in as ${client.user.tag}!`);
+});
+
+client.login(token);

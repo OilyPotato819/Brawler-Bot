@@ -4,13 +4,12 @@
 const { deployCommands } = require('./deploy-commands');
 deployCommands();
 
-const { Client, Collection, Events, GatewayIntentBits, messageLink } = require('discord.js');
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
 const token = process.env.TOKEN;
 client.commands = new Collection();
 

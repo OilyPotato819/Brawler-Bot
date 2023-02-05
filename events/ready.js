@@ -1,4 +1,5 @@
 const { Events } = require('discord.js');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus } = require('@discordjs/voice');
 
 module.exports = {
    name: Events.ClientReady,

@@ -2,12 +2,13 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ComponentTyp
 
 module.exports = {
    SongMenu: class {
-      constructor(initialInter, youtubeResults, query) {
+      constructor(initialInter, youtubeResults, addToQueue) {
          this.initialInter = initialInter;
          this.client = initialInter.client;
-         this.query = query;
+         this.query = initialInter.options.getString('input');
          this.youtubeResults = youtubeResults;
          this.videoView = {};
+         this.addToQueue = addToQueue;
 
          this.sendList();
          this.createCollector();
@@ -15,7 +16,7 @@ module.exports = {
 
       async sendList() {
          const embed = new EmbedBuilder()
-            .setTitle(`Search this.youtubeResults for *${this.query}*`)
+            .setTitle(`Search results for *${this.query}*`)
             .setURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
             .setAuthor({ name: this.client.user.username, iconURL: this.client.user.avatarURL() })
             .addFields(
@@ -43,14 +44,26 @@ module.exports = {
       }
 
       viewVideos() {
-         this.videoView.actionRow = new ActionRowBuilder();
+         const videoView = this.videoView;
 
-         this.videoView.actionRow.addComponents(new ButtonBuilder().setCustomId('back').setStyle(ButtonStyle.Primary).setEmoji('⏮').setDisabled());
-         this.videoView.actionRow.addComponents(new ButtonBuilder().setCustomId('play').setStyle(ButtonStyle.Primary).setEmoji('▶'));
-         this.videoView.actionRow.addComponents(new ButtonBuilder().setCustomId('forward').setStyle(ButtonStyle.Primary).setEmoji('⏭'));
+         videoView.updatePage = function (num, i, limit, buttonInter) {
+            buttonInter.deferUpdate();
+            videoView.currentPage += num;
+            if (videoView.currentPage == limit) {
+               videoView.actionRow.components[i].setDisabled();
+            }
+            videoView.actionRow.components[2 - i].setDisabled(false);
+            this.initialInter.editReply({ content: videoView.content[videoView.currentPage], components: [videoView.actionRow] });
+         };
 
-         this.videoView.currentPage = 0;
-         this.videoView.content = [
+         videoView.actionRow = new ActionRowBuilder();
+
+         videoView.actionRow.addComponents(new ButtonBuilder().setCustomId('back').setStyle(ButtonStyle.Primary).setEmoji('⏮').setDisabled());
+         videoView.actionRow.addComponents(new ButtonBuilder().setCustomId('play').setStyle(ButtonStyle.Primary).setEmoji('▶'));
+         videoView.actionRow.addComponents(new ButtonBuilder().setCustomId('forward').setStyle(ButtonStyle.Primary).setEmoji('⏭'));
+
+         videoView.currentPage = 0;
+         videoView.content = [
             `**1/5** \n https://www.youtube.com/watch?v=${this.youtubeResults[0].id.videoId}`,
             `**2/5** \n https://www.youtube.com/watch?v=${this.youtubeResults[1].id.videoId}`,
             `**3/5** \n https://www.youtube.com/watch?v=${this.youtubeResults[2].id.videoId}`,
@@ -58,17 +71,7 @@ module.exports = {
             `**5/5** \n https://www.youtube.com/watch?v=${this.youtubeResults[4].id.videoId}`,
          ];
 
-         this.initialInter.editReply({ content: this.videoView.content[0], components: [this.videoView.actionRow], embeds: [] });
-      }
-
-      updatePage(num, i, limit, buttonInter) {
-         buttonInter.deferUpdate();
-         this.videoView.currentPage += num;
-         if (this.videoView.currentPage == limit) {
-            this.videoView.actionRow.components[i].setDisabled();
-         }
-         this.videoView.actionRow.components[2 - i].setDisabled(false);
-         this.initialInter.editReply({ content: this.videoView.content[this.videoView.currentPage], components: [this.videoView.actionRow] });
+         this.initialInter.editReply({ content: videoView.content[0], components: [videoView.actionRow], embeds: [] });
       }
 
       async createCollector() {
@@ -83,16 +86,20 @@ module.exports = {
                buttonInter.deferUpdate();
                this.viewVideos();
             } else if (!isNaN(customId)) {
+               const youtubeId = this.youtubeResults[+customId].id.videoId;
+               this.addToQueue(youtubeId, this.initialInter);
                this.initialInter.editReply({
                   content: `added **${this.youtubeResults[+customId].snippet.title}** to queue`,
                   components: [],
                   embeds: [],
                });
             } else if (buttonInter.customId == 'back') {
-               this.updatePage(-1, 0, 0, buttonInter);
+               this.videoView.updatePage(-1, 0, 0, buttonInter);
             } else if (buttonInter.customId == 'forward') {
-               this.updatePage(1, 2, 4, buttonInter);
+               this.videoView.updatePage(1, 2, 4, buttonInter);
             } else if (buttonInter.customId == 'play') {
+               const youtubeId = this.youtubeResults[this.videoView.currentPage].id.videoId;
+               this.addToQueue(youtubeId, this.initialInter);
                this.initialInter.editReply({
                   content: `added **${this.youtubeResults[this.videoView.currentPage].snippet.title}** to queue`,
                   components: [],

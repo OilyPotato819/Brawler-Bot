@@ -4,7 +4,7 @@
 const { deployCommands } = require('./deploy-commands');
 deployCommands();
 
-const { Client, Collection, Events, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, messageLink } = require('discord.js');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, AttachmentBuilder } = require('discord.js');
 require('dotenv').config();
 const fs = require('node:fs');
@@ -14,6 +14,7 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 const token = process.env.TOKEN;
 client.commands = new Collection();
 
+// Command files
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'));
 
@@ -28,53 +29,18 @@ for (const file of commandFiles) {
    }
 }
 
-client.on(Events.InteractionCreate, async (interaction) => {
-   if (!interaction.isChatInputCommand()) return;
+// Event files
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter((file) => file.endsWith('.js'));
 
-   const command = interaction.client.commands.get(interaction.commandName);
-
-   if (!command) {
-      console.error(`No command matching ${interaction.commandName} was found.`);
-      return;
+for (const file of eventFiles) {
+   const filePath = path.join(eventsPath, file);
+   const event = require(filePath);
+   if (event.once) {
+      client.once(event.name, (...args) => event.execute(...args));
+   } else {
+      client.on(event.name, (...args) => event.execute(...args));
    }
-
-   try {
-      await command.execute(interaction);
-   } catch (error) {
-      console.error(error);
-      await interaction.reply({
-         content: 'There was an error while executing this command!',
-         ephemeral: true,
-      });
-   }
-});
-
-client.on('ready', () => {
-   console.log(`Logged in as ${client.user.tag}!`);
-
-   let results = ['1', '2', '3', '4', '5'];
-   let rows = [];
-
-   for (let i = 0; i < results.length; i++) {
-      rows.push(
-         new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-               .setCustomId(i.toString())
-               .setLabel((i + 1).toString())
-               .setStyle(ButtonStyle.Primary)
-         )
-      );
-   }
-
-   let channel = client.channels.cache.get('964752876306055168');
-
-   const actionRow = new ActionRowBuilder();
-
-   actionRow.addComponents(new ButtonBuilder().setCustomId('back').setStyle(ButtonStyle.Primary).setEmoji('⏮'));
-   actionRow.addComponents(new ButtonBuilder().setCustomId('play').setStyle(ButtonStyle.Primary).setEmoji('▶'));
-   actionRow.addComponents(new ButtonBuilder().setCustomId('forward').setStyle(ButtonStyle.Primary).setEmoji('⏭'));
-
-   channel.send({ content: 'https://www.youtube.com/watch?v=p0BkfX2Twdc', components: [actionRow] });
-});
+}
 
 client.login(token);

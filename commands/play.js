@@ -1,121 +1,75 @@
 const { SlashCommandBuilder } = require('discord.js');
+const { SongMenu } = require('../classes/songMenu.js');
 
 module.exports = {
    data: new SlashCommandBuilder()
       .setName('play')
       .setDescription('play a song')
-      .addStringOption((option) =>
-         option.setName('input').setDescription('link or song name').setRequired(true)
-      ),
-   async execute(interaction) {
-      const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, Events } = require('discord.js');
+      .addStringOption((option) => option.setName('input').setDescription('link or song name').setRequired(true)),
+   async execute(interaction, client) {
       const fs = require('fs');
       const ytdl = require('ytdl-core');
+      const { google } = require('googleapis');
       const axios = require('axios');
+
+      async function getYouTubeVideos() {
+         const youtube = google.youtube({
+            version: 'v3',
+            auth: key,
+         });
+         const response = await youtube.search.list({
+            part: 'snippet',
+            type: 'video',
+            q: input,
+            maxResults: 5,
+         });
+
+         return response.data.items;
+      }
+
+      async function checkValidity() {
+         try {
+            await axios.get('https://www.youtube.com/oembed?format=json&url=' + input);
+            return true;
+         } catch (error) {
+            return false;
+         }
+      }
+
+      function getYouTubeId(url) {
+         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+         const match = url.match(regExp);
+
+         if (match && match[2].length === 11) {
+            return match[2];
+         } else {
+            return null;
+         }
+      }
 
       const key = process.env.YOUTUBE_KEY;
 
       const input = interaction.options.getString('input');
-      let url;
 
-      if (isValidUrl(input)) {
-         url = input;
+      if (input.startsWith('https://')) {
+         const valid = await checkValidity(input);
+
+         if (valid) {
+            const id = getYouTubeId(input);
+            play(id);
+         } else {
+            return interaction.reply({ content: 'not a valid link', ephemeral: true });
+         }
       } else {
-         //  axios
-         //     .get(
-         //        `https://www.googleapis.com/youtube/v3/search?key=${key}&type=video&part=snippet&maxResults=5&q=${input}`
-         //     )
-         //     .then((response) => {
-         //        console.log(response.data);
-         //     })
-         //     .catch((error) => {
-         //        console.log(error);
-         //     });
+         const youtubeResults = await getYouTubeVideos();
 
-         let results = ['1', '2', '3', '4', '5'];
-         let rows = [];
-
-         for (let i = 0; i < results.length; i++) {
-            rows.push(
-               new ActionRowBuilder().addComponents(
-                  new ButtonBuilder()
-                     .setCustomId(i.toString())
-                     .setLabel((i + 1).toString())
-                     .setStyle(ButtonStyle.Primary)
-               )
-            );
-         }
-
-         const embed = {
-            color: 0x0099ff,
-            fields: [
-               {
-                  name: 'title',
-                  value: 'author',
-               },
-               {
-                  name: '',
-                  value: '',
-                  inline: false,
-               },
-               {
-                  name: 'title',
-                  value: 'author',
-               },
-               {
-                  name: '',
-                  value: '',
-                  inline: false,
-               },
-               {
-                  name: 'title',
-                  value: 'author',
-               },
-               {
-                  name: '',
-                  value: '',
-                  inline: false,
-               },
-               {
-                  name: 'title',
-                  value: 'author',
-               },
-               {
-                  name: '',
-                  value: '',
-                  inline: false,
-               },
-               {
-                  name: 'title',
-                  value: 'author',
-               },
-            ],
-         };
-
-         await interaction.reply({
-            ephemeral: true,
-            components: [rows[0], rows[1], rows[2], rows[3], rows[4]],
-            embeds: [embed],
-         });
-
-         interaction.client.on(Events.InteractionCreate, (buttonPress) => {
-            if (!buttonPress.isButton()) return;
-            console.log(buttonPress.customId);
-         });
+         interaction.songMenu = new SongMenu(interaction, youtubeResults, input);
       }
 
-      function isValidUrl(string) {
-         let url;
-         try {
-            url = new URL(string);
-         } catch (_) {
-            return false;
-         }
-         return true;
+      function play(id) {
+         console.log(id);
+
+         // ytdl('http://www.youtube.com/watch?v=aqz-KE-bpKQ').pipe(fs.createWriteStream('video.mp4'));
       }
-
-      //   await interaction.reply('playing ' + input);
-
-      //   ytdl('http://www.youtube.com/watch?v=aqz-KE-bpKQ').pipe(fs.createWriteStream('video.mp4'));
    },
 };

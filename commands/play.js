@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { SongMenu } = require('../classes/songMenu.js');
-const { Queue } = require('../classes/queue.js');
 
 module.exports = {
    data: new SlashCommandBuilder()
@@ -18,12 +17,17 @@ module.exports = {
             version: 'v3',
             auth: key,
          });
-         const response = await youtube.search.list({
-            part: 'snippet',
-            type: 'video',
-            q: input,
-            maxResults: 5,
-         });
+         const response = await youtube.search
+            .list({
+               part: 'snippet',
+               type: 'video',
+               q: input,
+               maxResults: 5,
+            })
+            .catch(() => {
+               interaction.reply({ content: 'error searching for videos', ephemeral: true });
+               return null;
+            });
 
          return response.data.items;
       }
@@ -48,29 +52,6 @@ module.exports = {
          }
       }
 
-      function addToQueue(youtubeId, interaction) {
-         const guildId = interaction.guildId;
-         const vc = interaction.member.voice.channel;
-         const client = interaction.client;
-
-         if (!vc) {
-            interaction.editReply({
-               content: `you must be in a vc to add to queue`,
-               components: [],
-               embeds: [],
-            });
-         }
-
-         if (!client.queues) {
-            client.queues = new Map();
-         }
-         if (!client.queues.get(guildId)) {
-            client.queues.set(guildId, new Queue(vc, client));
-         }
-
-         client.queues.get(guildId).add(youtubeId);
-      }
-
       const key = process.env.YOUTUBE_KEY;
       const input = interaction.options.getString('input');
       const vc = interaction.member.voice.channel;
@@ -83,14 +64,15 @@ module.exports = {
          if (valid) {
             const youtubeId = getYouTubeId(input);
             interaction.reply(`added **${input}** to queue`);
-            addToQueue(youtubeId, interaction);
+            interaction.client.queueHandler.getQueue(interaction).add(youtubeId);
          } else {
             return interaction.reply({ content: 'not a valid link', ephemeral: true });
          }
       } else {
          const youtubeResults = await getYouTubeVideos();
+         if (!youtubeResults) return;
 
-         interaction.songMenu = new SongMenu(interaction, youtubeResults, addToQueue);
+         interaction.songMenu = new SongMenu(interaction, youtubeResults);
       }
    },
 };

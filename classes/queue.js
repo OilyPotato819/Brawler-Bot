@@ -62,6 +62,8 @@ module.exports = {
                return interaction.reply({ content: 'error searching youtube', ephemeral: true });
             });
 
+         if (youtubeResults.length == 0) return interaction.reply({ content: 'no results found', ephemeral: true });
+
          return youtubeResults;
       }
    },

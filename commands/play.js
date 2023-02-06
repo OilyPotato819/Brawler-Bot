@@ -13,7 +13,7 @@ module.exports = {
 
       if (!interaction.member.voice.channel) return interaction.reply({ content: 'you must be in a vc to use this command', ephemeral: true });
 
-      if (input.startsWith('https://www.youtube.com/watch?v=')) {
+      if (input.startsWith('https://')) {
          await axios.get('https://www.youtube.com/oembed?format=json&url=' + input).catch(() => {
             return interaction.reply({ content: 'not a valid link', ephemeral: true });
          });

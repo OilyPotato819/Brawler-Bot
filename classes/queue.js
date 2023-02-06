@@ -1,6 +1,7 @@
 const ytdl = require('ytdl-core');
 const { joinVoiceChannel } = require('@discordjs/voice');
 const { createAudioPlayer, createAudioResource } = require('@discordjs/voice');
+const play = require('play-dl');
 
 module.exports = {
    Queue: class {
@@ -18,21 +19,22 @@ module.exports = {
             if (newState.status == 'idle') {
                this.songs.splice(0, 1);
                if (this.songs.length > 0) this.play();
-
-               console.log(this.songs);
             }
          });
       }
 
-      add(youtubeId) {
-         this.songs.push(youtubeId);
+      add(youtubeLink) {
+         this.songs.push(youtubeLink);
          this.join();
          if (this.songs.length == 1) this.play();
       }
 
-      play() {
-         const stream = createAudioResource(ytdl(`http://www.youtube.com/watch?v=${this.songs[0]}`, { filter: 'audioonly' }));
-         this.player.play(stream);
+      async play() {
+         const stream = await play.stream(this.songs[0]);
+         let resource = createAudioResource(stream.stream, {
+            inputType: stream.type,
+         });
+         this.player.play(resource);
       }
 
       join() {
@@ -49,6 +51,18 @@ module.exports = {
 
             this.connection.subscribe(this.player);
          }
+      }
+
+      async search(query) {
+         const youtubeResults = await play
+            .search(query, {
+               limit: 5,
+            })
+            .catch(() => {
+               return interaction.reply({ content: 'error searching youtube', ephemeral: true });
+            });
+
+         return youtubeResults;
       }
    },
 };

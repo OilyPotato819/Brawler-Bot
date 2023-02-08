@@ -1,0 +1,27 @@
+{
+    "cookie": {
+        "VISITOR_INFO1_LIVE": "zFOu9uyESmM",
+        "LOGIN_INFO": "AFmmF2swRQIhANMauObQfnIJ-T4xD8nkkaGWE6IMpuawCDzAxhmU8h4VAiAoefN-o6_TQVAqhGmSQoh3ohde_wCihxT1NBcUSe8Iew:QUQ3MjNmd2FIYjBQVU1zT2Zoa3FSRkRseld5R0ZhTjhhbTJTdV83d3RGZlhpbERGQ2g5aVRsOW50R3YyX013emJjb09CWVpCVGV5WTRzNFJDck5od1BtemZ1VVFIQXkybjFpZFdCbUdXWktrQ0Y5OUYxTWpuN1ZJNnBSSHBIbm5uWVI0QTA5bFhzdDBBNzBnQ2RRWGVBRmFUa3JkSHI3VW9B",
+        "DEVICE_INFO": "ChxOekU0TmpnMU16TXhPVFkwTURnM05EWTBOUT09EISq850GGISq850G",
+        "HSID": "AyCK7_h6hK20I_Z7F",
+        "SSID": "A1mXJ2BZM0CVKwTsD",
+        "APISID": "teQZ3GUojcyyzgt4/Ax9DkyBM2pR9rmOH6",
+        "SAPISID": "clqOW1xJrA9o9ESG/ALjsXKDsQOnlxwjCc",
+        "__Secure-1PAPISID": "clqOW1xJrA9o9ESG/ALjsXKDsQOnlxwjCc",
+        "__Secure-3PAPISID": "clqOW1xJrA9o9ESG/ALjsXKDsQOnlxwjCc",
+        "SID": "Tggs3_S6SiDtdZ8pFa9f6IP0SjDOZ1AAaNHWlTLAZjbc9VWcs8G93-TBKDrKoKrhRWSmYg.",
+        "__Secure-1PSID": "Tggs3_S6SiDtdZ8pFa9f6IP0SjDOZ1AAaNHWlTLAZjbc9VWccZisz2bPydib4VQAEzazXw.",
+        "__Secure-3PSID": "Tggs3_S6SiDtdZ8pFa9f6IP0SjDOZ1AAaNHWlTLAZjbc9VWc_4z-G8VdZnXI3_orlK0dvg.",
+        "YSC": "1GE_4D6a8wM",
+        "PREF": "volume=5&tz=America.Edmonton&f6=40000000&f5=20000&f7=100",
+        "SIDCC": "AFvIBn87YqEaEKKQsyQ4V8OnLFFO6Qq1gRFG2HfSCVZ87GRYV7iR-lSQZUttDyrRarWuQ63khQ",
+        "__Secure-1PSIDCC": "AFvIBn8JQ9KhOcrwR5oAZXSm0BIGfWn_n4xtuONXKoiu3AATcrIfOqGB-dzhZLcb67cf7pq3ew",
+        "__Secure-3PSIDCC": "AFvIBn8IeigXE9GidDSRt0o8JzK0d7r_ywhvWJEEl1tfIKgkYBKTUlH4yf4xm9x8EMms4Zgebb0",
+        "expires": "Thu, 08-Feb-2024 05:57:57 GMT",
+        "path": "/",
+        "domain": ".youtube.com",
+        "priority": "high",
+        "SameSite": "none"
+    },
+    "file": true
+}

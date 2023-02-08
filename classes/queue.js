@@ -1,4 +1,3 @@
-const ytdl = require('ytdl-core');
 const { joinVoiceChannel } = require('@discordjs/voice');
 const { createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 const play = require('play-dl');

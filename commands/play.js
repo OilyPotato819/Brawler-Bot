@@ -27,8 +27,7 @@ module.exports = {
             ephemeral: true,
           });
         });
-      queue.add(input);
-      interaction.reply(`added ${input} to queue`);
+      queue.add(input, interaction);
     } else {
       const youtubeResults = await queue.search(input);
       interaction.songMenu = new SongMenu(interaction, youtubeResults);

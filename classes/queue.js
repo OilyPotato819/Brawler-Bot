@@ -9,6 +9,7 @@ module.exports = {
       this.vc = vc;
       this.player = createAudioPlayer();
       this.songs = [];
+      this.playing = "nothing";
 
       this.createEventListeners();
     }
@@ -16,20 +17,40 @@ module.exports = {
     createEventListeners() {
       this.player.on("stateChange", (_oldState, newState) => {
         if (newState.status == "idle") {
-          this.songs.splice(0, 1);
-          if (this.songs.length > 0) this.play();
+          if (this.songs.length > 0) {
+            this.play();
+            this.playing = this.songs[0].title;
+            this.songs.splice(0, 1);
+          } else {
+            this.playing = "nothing";
+          }
         }
       });
     }
 
-    add(youtubeLink) {
-      this.songs.push(youtubeLink);
+    add(youtubeVideo, interaction) {
+      const message = {
+        content: `added **${youtubeVideo.url}** to queue`,
+        components: [],
+        embeds: [],
+      };
+
+      if (interaction.replied) {
+        interaction.editReply(message);
+      } else {
+        interaction.reply(message);
+      }
+
+      this.songs.push(youtubeVideo);
       this.join();
-      if (this.songs.length == 1) this.play();
+      if (this.songs.length == 1) {
+        this.play();
+        this.playing = this.songs[0].title;
+      }
     }
 
     async play() {
-      const stream = await play.stream(this.songs[0]);
+      const stream = await play.stream(this.songs[0].url);
       let resource = createAudioResource(stream.stream, {
         inputType: stream.type,
       });
@@ -80,8 +101,20 @@ module.exports = {
           ephemeral: true,
         });
       }
-      
-      this.player.
+
+      interaction.reply({
+        content: `skipped **${this.playing}**`,
+        ephemeral: true,
+      });
+
+      this.player.stop();
+    }
+
+    np(interaction) {
+      interaction.reply({
+        content: `now playing **${this.playing}**`,
+        ephemeral: true,
+      });
     }
   },
 };

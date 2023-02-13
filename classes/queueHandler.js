@@ -1,4 +1,4 @@
-const { Queue } = require("./queue.js");
+const { Queue } = require('./queue.js');
 
 module.exports = {
   QueueHandler: class {

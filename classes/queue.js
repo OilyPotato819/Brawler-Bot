@@ -1,6 +1,6 @@
-const { joinVoiceChannel } = require("@discordjs/voice");
-const { createAudioPlayer, createAudioResource } = require("@discordjs/voice");
-const play = require("play-dl");
+const { joinVoiceChannel } = require('@discordjs/voice');
+const { createAudioPlayer, createAudioResource } = require('@discordjs/voice');
+const play = require('play-dl');
 
 module.exports = {
   Queue: class {
@@ -9,19 +9,19 @@ module.exports = {
       this.vc = vc;
       this.player = createAudioPlayer();
       this.songs = [];
-      this.playing = "nothing";
+      this.playing = 'nothing';
 
       this.createEventListeners();
     }
 
     createEventListeners() {
-      this.player.on("stateChange", (_oldState, newState) => {
-        if (newState.status == "idle") {
+      this.player.on('stateChange', (_oldState, newState) => {
+        if (newState.status == 'idle') {
           if (this.songs.length > 0) {
             this.play();
             this.playing = this.songs[0].title;
           } else {
-            this.playing = "nothing";
+            this.playing = 'nothing';
           }
         }
       });
@@ -42,7 +42,7 @@ module.exports = {
 
       this.songs.push(youtubeVideo);
       this.join();
-      if (this.playing == "nothing") {
+      if (this.playing == 'nothing') {
         this.play();
         this.playing = this.songs[0].title;
       }
@@ -80,14 +80,14 @@ module.exports = {
         })
         .catch(() => {
           return interaction.reply({
-            content: "error searching youtube",
+            content: 'error searching youtube',
             ephemeral: true,
           });
         });
 
       if (youtubeResults.length == 0)
         return interaction.reply({
-          content: "no results found",
+          content: 'no results found',
           ephemeral: true,
         });
 
@@ -97,7 +97,7 @@ module.exports = {
     skip(interaction) {
       if (!this.playing) {
         return interaction.reply({
-          content: "queue is empty",
+          content: 'queue is empty',
           ephemeral: true,
         });
       }
@@ -115,18 +115,18 @@ module.exports = {
     }
 
     pause(interaction) {
-      if (this.player.state.status == "playing") {
-        interaction.reply("player is now paused");
+      if (this.player.state.status == 'playing') {
+        interaction.reply('player is now paused');
       } else {
         interaction.reply({
-          content: "player is already paused",
+          content: 'player is already paused',
           ephemeral: true,
         });
       }
     }
 
     viewQueue(interaction) {
-      let string = "nothing in queue";
+      let string = 'nothing in queue';
 
       if (this.songs.length) {
         string = `1. **${this.songs[0].title}**`;

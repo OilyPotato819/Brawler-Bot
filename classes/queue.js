@@ -116,10 +116,23 @@ module.exports = {
 
     pause(interaction) {
       if (this.player.state.status == 'playing') {
+        this.player.pause();
         interaction.reply('player is now paused');
       } else {
         interaction.reply({
-          content: 'player is already paused',
+          content: 'player is not currently playing',
+          ephemeral: true,
+        });
+      }
+    }
+
+    unpause(interaction) {
+      if (this.player.state.status == 'paused') {
+        this.player.unpause();
+        interaction.reply('player is now unpaused');
+      } else {
+        interaction.reply({
+          content: 'player is not currently paused',
           ephemeral: true,
         });
       }

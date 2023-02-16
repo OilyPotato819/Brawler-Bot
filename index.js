@@ -44,6 +44,8 @@ for (const file of eventFiles) {
   }
 }
 
-client.login(token);
+client.login(token).catch(() => {
+  console.error('invalid token');
+});
 
 client.queueHandler = new QueueHandler();

@@ -1,5 +1,5 @@
-const { joinVoiceChannel } = require('@discordjs/voice');
-const { createAudioPlayer, createAudioResource } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
+const { SongMenu } = require('./songMenu.js');
 const play = require('play-dl');
 
 module.exports = {
@@ -9,7 +9,8 @@ module.exports = {
       this.vc = vc;
       this.player = createAudioPlayer();
       this.songs = [];
-      this.playing = 'nothing';
+      this.playing = null;
+      this.looping = false;
 
       this.createEventListeners();
     }
@@ -17,11 +18,12 @@ module.exports = {
     createEventListeners() {
       this.player.on('stateChange', (_oldState, newState) => {
         if (newState.status == 'idle') {
-          if (this.songs.length > 0) {
+          if (this.looping) {
             this.play();
-            this.playing = this.songs[0].title;
+          } else if (this.songs.length > 0) {
+            this.play();
           } else {
-            this.playing = 'nothing';
+            this.playing = null;
           }
         }
       });
@@ -42,18 +44,17 @@ module.exports = {
 
       this.songs.push(youtubeVideo);
       this.join();
-      if (this.playing == 'nothing') {
+      if (!this.playing) {
         this.play();
-        this.playing = this.songs[0].title;
       }
     }
 
-    async play() {
+    async play(looping) {
       const stream = await play.stream(this.songs[0].url);
       let resource = createAudioResource(stream.stream, {
         inputType: stream.type,
       });
-      this.songs.splice(0, 1);
+      if (!this.looping) this.playing = this.songs.shift();
       this.player.play(resource);
     }
 
@@ -92,6 +93,22 @@ module.exports = {
         });
 
       return youtubeResults;
+    }
+
+    async pickSong(input, interaction) {
+      if (input.startsWith('https://')) {
+        const video = await play.video_basic_info(input).catch(() => {
+          interaction.reply({
+            content: 'not a valid youtube link',
+            ephemeral: true,
+          });
+        });
+
+        if (video) this.add(video.video_details, interaction);
+      } else {
+        const youtubeResults = await this.search(input);
+        interaction.songMenu = new SongMenu(interaction, youtubeResults);
+      }
     }
 
     skip(interaction) {

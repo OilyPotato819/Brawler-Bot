@@ -25,6 +25,9 @@ module.exports = {
           } else {
             this.playing = null;
           }
+        } else if (newState.status == 'autopaused') {
+          // this.connection.subscribe(this.player);
+          // console.log(this.player.playable);
         }
       });
     }
@@ -49,7 +52,7 @@ module.exports = {
       }
     }
 
-    async play(looping) {
+    async play() {
       const stream = await play.stream(this.songs[0].url);
       let resource = createAudioResource(stream.stream, {
         inputType: stream.type,

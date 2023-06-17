@@ -5,6 +5,7 @@ module.exports = { deployCommands: deployCommands, deleteCommands: deleteCommand
 
 const token = process.env.TOKEN;
 const clientId = process.env.CLIENT_ID;
+if (!clientId) return console.error('need client id');
 const rest = new REST({ version: '10' }).setToken(token);
 
 function deployCommands() {

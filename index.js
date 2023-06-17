@@ -12,6 +12,7 @@ const path = require('node:path');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildVoiceStates] });
 const token = process.env.TOKEN;
+if (!token) return console.error('need token');
 client.commands = new Collection();
 
 // Command files

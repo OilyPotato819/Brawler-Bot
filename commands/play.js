@@ -13,6 +13,7 @@ module.exports = {
 
     if (!queue) return;
 
-    queue.pickSong(input, interaction);
+    const hasVoice = queue.checkUserVoice(interaction);
+    if (hasVoice) queue.pickSong(input, interaction);
   },
 };

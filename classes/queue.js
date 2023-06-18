@@ -4,13 +4,13 @@ const play = require('play-dl');
 
 module.exports = {
   Queue: class {
-    constructor(vc, client) {
+    constructor(client) {
       this.client = client;
-      this.vc = vc;
       this.player = createAudioPlayer();
       this.songs = [];
       this.playing = null;
       this.looping = false;
+      this.connection = null;
 
       this.createEventListeners();
     }
@@ -18,18 +18,24 @@ module.exports = {
     createEventListeners() {
       this.player.on('stateChange', (_oldState, newState) => {
         if (newState.status == 'idle') {
-          if (this.looping) {
-            this.play();
-          } else if (this.songs.length > 0) {
+          if (this.looping || this.songs.length > 0) {
             this.play();
           } else {
             this.playing = null;
           }
-        } else if (newState.status == 'autopaused') {
-          // this.connection.subscribe(this.player);
-          // console.log(this.player.playable);
         }
       });
+    }
+
+    checkUserVoice(interaction) {
+      const vc = interaction.member.voice.channel;
+      if (vc) return true;
+
+      interaction.reply({
+        content: `you must be in a vc to use this command`,
+        ephemeral: true,
+      });
+      return false;
     }
 
     add(youtubeVideo, interaction) {
@@ -46,7 +52,7 @@ module.exports = {
       }
 
       this.songs.push(youtubeVideo);
-      this.join();
+      this.join(interaction, false);
       if (!this.playing) {
         this.play();
       }
@@ -61,20 +67,31 @@ module.exports = {
       this.player.play(resource);
     }
 
-    join() {
-      const vcClient = this.client.voice.channel;
-      if (vcClient != this.vc) {
-        if (vcClient) this.connection.destroy();
+    join(interaction, reply) {
+      const clientVcId = this.connection?.packets.state.channel_id;
+      const memberVoice = interaction.member.voice;
 
-        this.connection = joinVoiceChannel({
-          channelId: this.vc.id,
-          guildId: this.vc.guild.id,
-          adapterCreator: this.vc.guild.voiceAdapterCreator,
-          selfDeaf: false,
-        });
-
-        this.connection.subscribe(this.player);
+      if (memberVoice.channelId === clientVcId) {
+        if (reply) {
+          return interaction.reply({
+            content: 'already in your call',
+            ephemeral: true,
+          });
+        }
+        return;
       }
+
+      if (this.connection) this.connection.destroy();
+
+      this.connection = joinVoiceChannel({
+        channelId: memberVoice.channelId,
+        guildId: memberVoice.guild.id,
+        adapterCreator: memberVoice.guild.voiceAdapterCreator,
+        selfDeaf: false,
+      });
+
+      if (reply) interaction.reply(`joined **${memberVoice.channel.name}** call`);
+      this.connection.subscribe(this.player);
     }
 
     async search(query) {

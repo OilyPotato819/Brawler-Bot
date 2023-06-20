@@ -13,6 +13,17 @@ module.exports = {
     }
 
     async sendList() {
+      const fields = [];
+      for (let i = 0; i < 5; i++) {
+        fields.push({
+          name: ' ',
+          value: `
+            **${i + 1}.** ${this.youtubeResults[i].title} (${this.youtubeResults[i].durationRaw}) 
+            *${this.youtubeResults[i].channel.name}*
+          `,
+        });
+      }
+
       const embed = new EmbedBuilder()
         .setTitle(`Search results for *${this.query}*`)
         .setURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
@@ -20,28 +31,7 @@ module.exports = {
           name: this.client.user.username,
           iconURL: this.client.user.avatarURL(),
         })
-        .addFields(
-          {
-            name: ' ',
-            value: `**1.** ${this.youtubeResults[0].title} (${this.youtubeResults[0].durationRaw}) \n *${this.youtubeResults[0].channel.name}*`,
-          },
-          {
-            name: ' ',
-            value: `**2.** ${this.youtubeResults[1].title} (${this.youtubeResults[0].durationRaw}) \n *${this.youtubeResults[1].channel.name}*`,
-          },
-          {
-            name: ' ',
-            value: `**3.** ${this.youtubeResults[2].title} (${this.youtubeResults[0].durationRaw}) \n *${this.youtubeResults[2].channel.name}*`,
-          },
-          {
-            name: ' ',
-            value: `**4.** ${this.youtubeResults[3].title} (${this.youtubeResults[0].durationRaw}) \n *${this.youtubeResults[3].channel.name}*`,
-          },
-          {
-            name: ' ',
-            value: `**5.** ${this.youtubeResults[4].title} (${this.youtubeResults[0].durationRaw}) \n *${this.youtubeResults[4].channel.name}*`,
-          }
-        );
+        .addFields(...fields);
 
       const row1 = new ActionRowBuilder();
 

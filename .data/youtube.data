@@ -23,7 +23,7 @@
         "priority": "high",
         "SameSite": "none",
         "Domain": ".youtube.com",
-        "Expires": "Mon, 21-Sep-2020 21:05:36 GMT",
+        "Expires": "Wed, 23-Sep-2020 23:04:31 GMT",
         "Path": "/",
         "Priority": "HIGH",
         "GPS": "1"

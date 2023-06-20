@@ -18,7 +18,10 @@ module.exports = {
     createEventListeners() {
       this.player.on('stateChange', (_oldState, newState) => {
         if (newState.status == 'idle') {
-          if (this.looping || this.songs.length > 0) {
+          if (this.looping) {
+            if (this.playing) this.songs.unshift(this.playing);
+            if (this.songs[0]) this.play();
+          } else if (this.songs.length > 0) {
             this.play();
           } else {
             this.playing = null;
@@ -63,7 +66,7 @@ module.exports = {
       let resource = createAudioResource(stream.stream, {
         inputType: stream.type,
       });
-      if (!this.looping) this.playing = this.songs.shift();
+      this.playing = this.songs.shift();
       this.player.play(resource);
     }
 
@@ -139,14 +142,15 @@ module.exports = {
         });
       }
 
-      interaction.reply(`skipped **${this.playing}**`);
+      interaction.reply(`skipped **${this.playing.title}**`);
 
+      this.playing = null;
       this.player.stop();
     }
 
     np(interaction) {
       interaction.reply({
-        content: `now playing **${this.playing}**`,
+        content: `now playing **${this.playing.url}**`,
         ephemeral: true,
       });
     }

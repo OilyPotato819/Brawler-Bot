@@ -108,6 +108,10 @@ module.exports = {
         time: 30000,
       });
 
+      this.collector.on('end', () => {
+        message.delete();
+      });
+
       this.collector.on('collect', (buttonInter) => {
         const customId = buttonInter.customId;
         const queue = this.client.queueHandler.getQueue(this.initialInter);
@@ -126,6 +130,8 @@ module.exports = {
           const video = this.youtubeResults[this.videoView.currentPage];
           queue.add(video, this.initialInter);
         }
+
+        this.collector.resetTimer();
       });
     }
   },

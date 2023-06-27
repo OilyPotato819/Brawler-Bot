@@ -102,6 +102,7 @@ module.exports = {
 
     async createCollector() {
       const message = await this.initialInter.fetchReply();
+      let played = false;
 
       this.collector = message.createMessageComponentCollector({
         componentType: ComponentType.Button,
@@ -109,7 +110,7 @@ module.exports = {
       });
 
       this.collector.on('end', () => {
-        message.delete();
+        if (!played) message.delete();
       });
 
       this.collector.on('collect', (buttonInter) => {
@@ -119,6 +120,7 @@ module.exports = {
         if (!isNaN(customId)) {
           const video = this.youtubeResults[+customId];
           queue.add(video, this.initialInter);
+          played = true;
         } else if (customId == 'view') {
           buttonInter.deferUpdate();
           this.viewVideos();
@@ -129,6 +131,7 @@ module.exports = {
         } else if (buttonInter.customId == 'play') {
           const video = this.youtubeResults[this.videoView.currentPage];
           queue.add(video, this.initialInter);
+          played = true;
         }
 
         this.collector.resetTimer();

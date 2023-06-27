@@ -150,7 +150,7 @@ module.exports = {
 
     np(interaction) {
       interaction.reply({
-        content: `now playing **${this.playing.url}**`,
+        content: `now playing **${this.playing?.url || 'nothing'}**`,
         ephemeral: true,
       });
     }

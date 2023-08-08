@@ -1,0 +1,1 @@
+- add ability to add a playlist to queue

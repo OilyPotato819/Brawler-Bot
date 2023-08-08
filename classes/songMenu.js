@@ -7,6 +7,7 @@ module.exports = {
       this.client = initialInter.client;
       this.query = initialInter.options.getString('input');
       this.youtubeResults = youtubeResults;
+      this.resultNum = youtubeResults.length;
 
       this.sendList();
       this.createCollector();
@@ -14,7 +15,7 @@ module.exports = {
 
     async sendList() {
       const fields = [];
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < this.resultNum; i++) {
         fields.push({
           name: ' ',
           value: `
@@ -35,7 +36,7 @@ module.exports = {
 
       const row1 = new ActionRowBuilder();
 
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < this.resultNum; i++) {
         const id = i.toString();
         const label = (i + 1).toString();
 
@@ -86,11 +87,11 @@ module.exports = {
       );
 
       this.videoView.content = [
-        `**1/5** \n ${this.youtubeResults[0].url}`,
-        `**2/5** \n ${this.youtubeResults[1].url}`,
-        `**3/5** \n ${this.youtubeResults[2].url}`,
-        `**4/5** \n ${this.youtubeResults[3].url}`,
-        `**5/5** \n ${this.youtubeResults[4].url}`,
+        `**1/${this.resultNum}** \n ${this.youtubeResults[0].url}`,
+        `**2/${this.resultNum}** \n ${this.youtubeResults[1].url}`,
+        `**3/${this.resultNum}** \n ${this.youtubeResults[2].url}`,
+        `**4/${this.resultNum}** \n ${this.youtubeResults[3].url}`,
+        `**5/${this.resultNum}** \n ${this.youtubeResults[4].url}`,
       ];
 
       this.initialInter.editReply({

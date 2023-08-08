@@ -41,9 +41,16 @@ module.exports = {
       return false;
     }
 
-    add(youtubeVideo, interaction) {
+    add(media, interaction) {
+      let content;
+      if (media.type === 'playlist') {
+        content = `added **${media.videoCount}** videos from [**${media.title}**](${media.url}) to queue`;
+      } else if (media.type === 'video') {
+        content = `added [**${media.title}**](${media.url}) to queue`;
+      }
+
       const message = {
-        content: `added **${youtubeVideo.url}** to queue`,
+        content: content,
         components: [],
         embeds: [],
       };
@@ -54,7 +61,7 @@ module.exports = {
         interaction.reply(message);
       }
 
-      this.songs.push(youtubeVideo);
+      this.songs.push(media);
       this.join(interaction, false);
       if (!this.playing) {
         this.play();
@@ -62,11 +69,13 @@ module.exports = {
     }
 
     async play() {
-      const stream = await play.stream(this.songs[0].url);
+      this.playing = this.songs.shift();
+
+      const stream = await play.stream(this.playing.url);
       let resource = createAudioResource(stream.stream, {
         inputType: stream.type,
       });
-      this.playing = this.songs.shift();
+
       this.player.play(resource);
     }
 
@@ -97,10 +106,13 @@ module.exports = {
       this.connection.subscribe(this.player);
     }
 
-    async search(query) {
+    async search(query, source, interaction) {
       const youtubeResults = await play
         .search(query, {
           limit: 5,
+          source: {
+            youtube: source,
+          },
         })
         .catch(() => {
           return interaction.reply({
@@ -109,27 +121,34 @@ module.exports = {
           });
         });
 
-      if (youtubeResults.length == 0)
+      if (youtubeResults.length == 0) {
         return interaction.reply({
           content: 'no results found',
           ephemeral: true,
         });
+      }
 
       return youtubeResults;
     }
 
-    async pickSong(input, interaction) {
+    async pickSong(input, source, interaction) {
       if (input.startsWith('https://')) {
-        const video = await play.video_basic_info(input).catch(() => {
+        if (input.includes('playlist')) {
+          const playlist = await play.playlist_info(input, { incomplete: true }).catch(badLink);
+          this.add(await playlist.all_videos(), interaction);
+        } else {
+          const video = await play.video_basic_info(input).catch(badLink);
+          this.add(video.video_details, interaction);
+        }
+
+        function badLink() {
           interaction.reply({
-            content: 'not a valid youtube link',
+            content: 'not a valid link',
             ephemeral: true,
           });
-        });
-
-        if (video) this.add(video.video_details, interaction);
+        }
       } else {
-        const youtubeResults = await this.search(input);
+        const youtubeResults = await this.search(input, source, interaction);
         interaction.songMenu = new SongMenu(interaction, youtubeResults);
       }
     }
@@ -142,7 +161,7 @@ module.exports = {
         });
       }
 
-      interaction.reply(`skipped **${this.playing.title}**`);
+      interaction.reply(`skipped [**${this.playing.title}**](<${this.playing.url}>)`);
 
       this.playing = null;
       this.player.stop();
@@ -150,7 +169,7 @@ module.exports = {
 
     np(interaction) {
       interaction.reply({
-        content: `now playing **${this.playing?.url || 'nothing'}**`,
+        content: `now playing **${`[${this.playing.title}](${this.playing?.url})` || 'nothing'}**`,
         ephemeral: true,
       });
     }
@@ -180,19 +199,52 @@ module.exports = {
     }
 
     viewQueue(interaction) {
-      let string = 'nothing in queue';
+      let string = '';
 
       if (this.songs.length) {
-        string = `1. **${this.songs[0].title}**`;
-        for (let i = 1; i < this.songs.length; i++) {
-          string += `\n ${i + 1}. **${this.songs[i].title}**`;
+        for (let i = 0; i < this.songs.length; i++) {
+          const song = this.songs[i];
+
+          if (i > 0) {
+            string += '\n';
+          }
+
+          string += `${i + 1}. [**${song.title}**](<${song.url}>) (${song.durationRaw})`;
         }
+      } else {
+        string = 'nothing in queue';
       }
 
       interaction.reply({
         content: string,
         ephemeral: true,
       });
+    }
+
+    clear(interaction) {
+      this.songs = [];
+
+      interaction.reply('cleared the queue');
+    }
+
+    remove(index, interaction) {
+      if (index > this.songs.length) {
+        return interaction.reply({
+          content: 'not a valid index',
+          ephemeral: true,
+        });
+      }
+
+      let removed;
+      if (index.length === 1) {
+        removed = this.songs.splice(index[0] - 1, 1);
+      } else {
+        removed = this.songs.splice(index[0] - 1, index[1] - index[0] + 1);
+      }
+
+      interaction.reply(
+        `removed **${removed.length === 1 ? removed[0].title : `${removed.length} songs`}** from queue`
+      );
     }
   },
 };

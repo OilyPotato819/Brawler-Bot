@@ -16,11 +16,14 @@ module.exports = {
     async sendList() {
       const fields = [];
       for (let i = 0; i < this.resultNum; i++) {
+        const result = this.youtubeResults[i];
         fields.push({
           name: ' ',
           value: `
-            **${i + 1}.** ${this.youtubeResults[i].title} (${this.youtubeResults[i].durationRaw}) 
-            *${this.youtubeResults[i].channel.name}*
+            **${i + 1}.** [${result.title}](<${result.url}>) (${
+            result.durationRaw || `${result.videoCount} videos`
+          }) 
+            *${result.channel.name}*
           `,
         });
       }
@@ -59,6 +62,7 @@ module.exports = {
       this.videoView = {
         currentPage: 0,
         actionRow: new ActionRowBuilder(),
+        content: [],
 
         updatePage: function (num, i, limit, buttonInter) {
           buttonInter.deferUpdate();
@@ -86,13 +90,9 @@ module.exports = {
         new ButtonBuilder().setCustomId('forward').setStyle(ButtonStyle.Primary).setEmoji('⏭')
       );
 
-      this.videoView.content = [
-        `**1/${this.resultNum}** \n ${this.youtubeResults[0].url}`,
-        `**2/${this.resultNum}** \n ${this.youtubeResults[1].url}`,
-        `**3/${this.resultNum}** \n ${this.youtubeResults[2].url}`,
-        `**4/${this.resultNum}** \n ${this.youtubeResults[3].url}`,
-        `**5/${this.resultNum}** \n ${this.youtubeResults[4].url}`,
-      ];
+      for (let i = 0; i < this.resultNum; i++) {
+        this.videoView.content.push(`**${i + 1}/${this.resultNum}**\n${this.youtubeResults[i].url}`);
+      }
 
       this.initialInter.editReply({
         content: this.videoView.content[0],
@@ -111,7 +111,7 @@ module.exports = {
       });
 
       this.collector.on('end', () => {
-        if (!played) message.delete();
+        if (!played) message.delete().catch(() => {});
       });
 
       this.collector.on('collect', (buttonInter) => {

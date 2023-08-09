@@ -1,1 +1,2 @@
-- add ability to add a playlist to queue
+- make queue have multiple pages when it gets too long
+- make shuffle command

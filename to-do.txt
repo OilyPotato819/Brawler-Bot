@@ -1,2 +1,2 @@
-- make queue have multiple pages when it gets too long
+- make np command better
 - make shuffle command

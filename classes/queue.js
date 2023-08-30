@@ -1,5 +1,7 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
+const { EmbedBuilder } = require('discord.js');
 const { SongMenu } = require('./songMenu.js');
+const { QueueViewer } = require('./queueViewer.js');
 const play = require('play-dl');
 
 module.exports = {
@@ -7,7 +9,7 @@ module.exports = {
     constructor(client) {
       this.client = client;
       this.player = createAudioPlayer();
-      this.songs = [];
+      this.videos = [];
       this.playing = null;
       this.loop = { current: false, all: false, each: 0, count: 0, index: null };
       this.connection = null;
@@ -29,11 +31,11 @@ module.exports = {
           } else if (this.loop.current && this.playing) {
             this.play();
           } else if (this.loop.all) {
-            this.loop.index = (this.loop.index + 1) % this.songs.length;
-            this.playing = this.songs[this.loop.index];
+            this.loop.index = (this.loop.index + 1) % this.videos.length;
+            this.playing = this.videos[this.loop.index];
             this.play();
-          } else if (this.songs.length > 0) {
-            this.playing = this.songs.shift();
+          } else if (this.videos.length > 0) {
+            this.playing = this.videos.shift();
             this.play();
           } else {
             this.playing = null;
@@ -84,13 +86,13 @@ module.exports = {
         videoArray[i].loopCount = 0;
       }
 
-      this.songs.push(...videoArray);
+      this.videos.push(...videoArray);
       this.join(interaction, false);
       if (!this.playing) {
         if (!this.loop.all) {
-          this.playing = this.songs.shift();
+          this.playing = this.videos.shift();
         } else {
-          this.playing = this.songs[0];
+          this.playing = this.videos[0];
         }
         this.play();
       }
@@ -163,9 +165,11 @@ module.exports = {
       if (input.startsWith('https://')) {
         if (subcommand === 'playlist') {
           const playlist = await play.playlist_info(input, { incomplete: true }).catch(badLink);
+          if (!playlist) badLink();
           this.add(playlist, interaction);
         } else if (subcommand === 'video') {
           const video = await play.video_basic_info(input).catch(badLink);
+          if (!video) badLink();
           this.add(video.video_details, interaction);
         }
 
@@ -230,36 +234,52 @@ module.exports = {
     }
 
     viewQueue(interaction) {
-      let string = '';
-
-      if (this.songs.length) {
-        for (let i = 0; i < this.songs.length; i++) {
-          const song = this.songs[i];
-
-          if (i > 0) {
-            string += '\n';
-          }
-
-          string += `${i + 1}. [**${song.title}**](<${song.url}>) (${song.durationRaw})`;
+      if (this.videos.length) {
+        if (this.videos.length > 10) {
+          return new QueueViewer(interaction, this.videos);
         }
-      } else {
-        string = 'nothing in queue';
-      }
 
-      interaction.reply({
-        content: string,
-        ephemeral: true,
-      });
+        const fields = [];
+        for (let i = 0; i < this.videos.length; i++) {
+          const video = this.videos[i];
+          fields.push({
+            name: ' ',
+            value: `**${i + 1}.** [${video.title}](<${video.url}>) (${
+              video.durationRaw || `${video.videoCount} videos`
+            })\n*${video.channel.name}*`,
+          });
+        }
+
+        const embed = new EmbedBuilder()
+          .setColor('Orange')
+          .setTitle('Queue')
+          .setURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+          .setAuthor({
+            name: this.client.user.username,
+            iconURL: this.client.user.avatarURL(),
+          })
+          .addFields(...fields);
+
+        interaction.reply({
+          embeds: [embed],
+          ephemeral: true,
+        });
+      } else {
+        interaction.reply({
+          content: 'nothing in queue',
+          ephemeral: true,
+        });
+      }
     }
 
     clear(interaction) {
-      this.songs = [];
+      this.videos = [];
 
       interaction.reply('cleared the queue');
     }
 
     remove(index, interaction) {
-      if (index > this.songs.length) {
+      if (index > this.videos.length) {
         return interaction.reply({
           content: 'not a valid index',
           ephemeral: true,
@@ -268,9 +288,9 @@ module.exports = {
 
       let removed;
       if (index.length === 1) {
-        removed = this.songs.splice(index[0] - 1, 1);
+        removed = this.videos.splice(index[0] - 1, 1);
       } else {
-        removed = this.songs.splice(index[0] - 1, index[1] - index[0] + 1);
+        removed = this.videos.splice(index[0] - 1, index[1] - index[0] + 1);
       }
 
       interaction.reply(
@@ -291,13 +311,13 @@ module.exports = {
     loopAll(interaction) {
       if (this.loop.all === true) {
         this.loop.all = false;
-        this.songs.splice(0, this.loop.index + 1);
+        this.videos.splice(0, this.loop.index + 1);
         this.loop.index = null;
         interaction.reply('turned looping all **off**');
       } else {
         this.loop.all = true;
         this.loop.index = 0;
-        if (this.playing) this.songs.unshift(this.playing);
+        if (this.playing) this.videos.unshift(this.playing);
         interaction.reply('turned looping all **on**');
       }
     }
@@ -305,6 +325,13 @@ module.exports = {
     loopEach(loopNumber, interaction) {
       this.loop.each = loopNumber;
       interaction.reply(`each track will now loop **${loopNumber}** times`);
+    }
+
+    loopOff(interaction) {
+      this.loop.each = 0;
+      this.loop.all = false;
+      this.loop.current = false;
+      interaction.reply('turned all looping off');
     }
 
     shuffle(interaction) {

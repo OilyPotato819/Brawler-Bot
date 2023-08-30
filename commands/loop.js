@@ -19,7 +19,8 @@ module.exports = {
             .setRequired(true)
         )
     )
-    .addSubcommand((subcommand) => subcommand.setName('all').setDescription('toggle looping everything')),
+    .addSubcommand((subcommand) => subcommand.setName('all').setDescription('toggle looping everything'))
+    .addSubcommand((subcommand) => subcommand.setName('off').setDescription('turn all looping off')),
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const loopNumber = interaction.options.getInteger('loop-number');
@@ -33,6 +34,8 @@ module.exports = {
       queue.loopAll(interaction);
     } else if (subcommand === 'each') {
       queue.loopEach(loopNumber, interaction);
+    } else if (subcommand === 'off') {
+      queue.loopOff(interaction);
     }
   },
 };

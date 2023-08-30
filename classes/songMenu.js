@@ -2,10 +2,10 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ComponentTyp
 
 module.exports = {
   SongMenu: class {
-    constructor(initialInter, youtubeResults) {
-      this.initialInter = initialInter;
-      this.client = initialInter.client;
-      this.query = initialInter.options.getString('input');
+    constructor(mainInteraction, youtubeResults) {
+      this.mainInteraction = mainInteraction;
+      this.client = mainInteraction.client;
+      this.query = mainInteraction.options.getString('input');
       this.youtubeResults = youtubeResults;
       this.resultNum = youtubeResults.length;
 
@@ -19,16 +19,14 @@ module.exports = {
         const result = this.youtubeResults[i];
         fields.push({
           name: ' ',
-          value: `
-            **${i + 1}.** [${result.title}](<${result.url}>) (${
+          value: `**${i + 1}.** [${result.title}](<${result.url}>) (${
             result.durationRaw || `${result.videoCount} videos`
-          }) 
-            *${result.channel.name}*
-          `,
+          })\n*${result.channel.name}*`,
         });
       }
 
       const embed = new EmbedBuilder()
+        .setColor('Orange')
         .setTitle(`Search results for *${this.query}*`)
         .setURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
         .setAuthor({
@@ -50,7 +48,7 @@ module.exports = {
         new ButtonBuilder().setCustomId('view').setLabel('View Videos').setStyle(ButtonStyle.Primary)
       );
 
-      await this.initialInter.reply({
+      this.mainInteraction.reply({
         components: [row1, row2],
         embeds: [embed],
       });
@@ -64,16 +62,16 @@ module.exports = {
         actionRow: new ActionRowBuilder(),
         content: [],
 
-        updatePage: function (num, i, limit, buttonInter) {
-          buttonInter.deferUpdate();
-          this.currentPage += num;
+        updatePage: function (addend, componentIndex, limit, buttonInteraction) {
+          buttonInteraction.deferUpdate();
+          this.currentPage += addend;
 
-          if (this.currentPage == limit) {
-            this.actionRow.components[i].setDisabled();
+          if (this.currentPage === limit) {
+            this.actionRow.components[componentIndex].setDisabled();
           }
-          this.actionRow.components[2 - i].setDisabled(false);
+          this.actionRow.components[2 - componentIndex].setDisabled(false);
 
-          songMenu.initialInter.editReply({
+          songMenu.mainInteraction.editReply({
             content: this.content[this.currentPage],
             components: [this.actionRow],
           });
@@ -81,20 +79,20 @@ module.exports = {
       };
 
       this.videoView.actionRow.addComponents(
-        new ButtonBuilder().setCustomId('back').setStyle(ButtonStyle.Primary).setEmoji('⏮').setDisabled()
+        new ButtonBuilder().setCustomId('back').setStyle(ButtonStyle.Primary).setEmoji('⏪').setDisabled()
       );
       this.videoView.actionRow.addComponents(
         new ButtonBuilder().setCustomId('play').setStyle(ButtonStyle.Primary).setEmoji('▶')
       );
       this.videoView.actionRow.addComponents(
-        new ButtonBuilder().setCustomId('forward').setStyle(ButtonStyle.Primary).setEmoji('⏭')
+        new ButtonBuilder().setCustomId('forward').setStyle(ButtonStyle.Primary).setEmoji('⏩')
       );
 
       for (let i = 0; i < this.resultNum; i++) {
         this.videoView.content.push(`**${i + 1}/${this.resultNum}**\n${this.youtubeResults[i].url}`);
       }
 
-      this.initialInter.editReply({
+      this.mainInteraction.editReply({
         content: this.videoView.content[0],
         components: [this.videoView.actionRow],
         embeds: [],
@@ -102,7 +100,7 @@ module.exports = {
     }
 
     async createCollector() {
-      const message = await this.initialInter.fetchReply();
+      const message = await this.mainInteraction.fetchReply();
       let played = false;
 
       this.collector = message.createMessageComponentCollector({
@@ -114,24 +112,24 @@ module.exports = {
         if (!played) message.delete().catch(() => {});
       });
 
-      this.collector.on('collect', (buttonInter) => {
-        const customId = buttonInter.customId;
-        const queue = this.client.queueHandler.getQueue(this.initialInter);
+      this.collector.on('collect', (buttonInteraction) => {
+        const customId = buttonInteraction.customId;
+        const queue = this.client.queueHandler.getQueue(this.mainInteraction);
 
         if (!isNaN(customId)) {
           const video = this.youtubeResults[+customId];
-          queue.add(video, this.initialInter);
+          queue.add(video, this.mainInteraction);
           played = true;
         } else if (customId == 'view') {
-          buttonInter.deferUpdate();
+          buttonInteraction.deferUpdate();
           this.viewVideos();
-        } else if (buttonInter.customId == 'back') {
-          this.videoView.updatePage(-1, 0, 0, buttonInter);
-        } else if (buttonInter.customId == 'forward') {
-          this.videoView.updatePage(1, 2, 4, buttonInter);
-        } else if (buttonInter.customId == 'play') {
+        } else if (customId == 'back') {
+          this.videoView.updatePage(-1, 0, 0, buttonInteraction);
+        } else if (customId == 'forward') {
+          this.videoView.updatePage(1, 2, 4, buttonInteraction);
+        } else if (customId == 'play') {
           const video = this.youtubeResults[this.videoView.currentPage];
-          queue.add(video, this.initialInter);
+          queue.add(video, this.mainInteraction);
           played = true;
         }
 

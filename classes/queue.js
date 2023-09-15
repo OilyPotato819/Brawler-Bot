@@ -164,18 +164,35 @@ module.exports = {
     async pickSong(input, subcommand, interaction) {
       if (input.startsWith('https://')) {
         if (subcommand === 'playlist') {
-          const playlist = await play.playlist_info(input, { incomplete: true }).catch(badLink);
-          if (!playlist) badLink();
+          const playlist = await play.playlist_info(input, { incomplete: true }).catch(() => {
+            return 'badlink';
+          });
+
+          if (video === 'badlink') return badLink();
+          if (!video) return loadError();
+
           this.add(playlist, interaction);
         } else if (subcommand === 'video') {
-          const video = await play.video_basic_info(input).catch(badLink);
-          if (!video) badLink();
+          const video = await play.video_basic_info(input).catch(() => {
+            return 'badlink';
+          });
+
+          if (video === 'badlink') return badLink();
+          if (!video) return loadError();
+
           this.add(video.video_details, interaction);
         }
 
         function badLink() {
           interaction.reply({
             content: 'not a valid link',
+            ephemeral: true,
+          });
+        }
+
+        function loadError() {
+          interaction.reply({
+            content: 'error loading this video',
             ephemeral: true,
           });
         }

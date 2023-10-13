@@ -36,7 +36,7 @@ module.exports = {
     const queue = interaction.client.queueHandler.getQueue(interaction);
     let index;
     if (subcommand === 'single') {
-      index = [interaction.options.getInteger('index')];
+      index = interaction.options.getInteger('index');
     } else if (subcommand === 'range') {
       index = [interaction.options.getInteger('start'), interaction.options.getInteger('end')];
     }

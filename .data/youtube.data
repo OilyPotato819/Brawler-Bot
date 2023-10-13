@@ -14,7 +14,11 @@
         "path": "/",
         "domain": ".youtube.com",
         "priority": "high",
-        "SameSite": "none"
+        "SameSite": "none",
+        "GPS": "1",
+        "Domain": ".youtube.com",
+        "Expires": "Sun, 17-Sep-2023 23:44:25 GMT",
+        "Path": "/"
     },
     "file": true
 }

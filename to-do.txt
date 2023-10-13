@@ -1,3 +1,4 @@
 - make np command better
-- make shuffle command
-- fix skip playlist once then queue is empty
+- do some testing with the loops, shuffling and removing
+- removing range is still a bit weird with shuffle
+- add ability to remove song that is playing with index 0

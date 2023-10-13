@@ -11,32 +11,37 @@ module.exports = {
       this.player = createAudioPlayer();
       this.videos = [];
       this.playing = null;
-      this.loop = { current: false, all: false, each: 0, count: 0, index: null };
+      this.loop = { current: false, all: false, each: 0 };
+      this.shuffleVideos = [];
       this.connection = null;
 
-      this.createEventListeners();
+      this._createEventListeners();
     }
 
-    createEventListeners() {
+    _createEventListeners() {
       this.player.on('stateChange', (_oldState, newState) => {
         if (newState.status === 'idle') {
-          if (this.playing?.loopCount >= this.loop.each && this.loop.each > 0 && !this.loop.current) {
+          if (this.playing?.loopCount >= this.loop.each && this.loop.each && !this.loop.current) {
             this.playing.loopCount = 0;
             this.playing = null;
           }
 
           if (this.playing?.loopCount < this.loop.each) {
             this.playing.loopCount++;
-            this.play();
+            this._play();
           } else if (this.loop.current && this.playing) {
-            this.play();
+            this._play();
           } else if (this.loop.all) {
-            this.loop.index = (this.loop.index + 1) % this.videos.length;
-            this.playing = this.videos[this.loop.index];
-            this.play();
-          } else if (this.videos.length > 0) {
             this.playing = this.videos.shift();
-            this.play();
+            this.videos.push(this.playing);
+            this._play();
+          } else if (this.shuffleVideos.length && !this.videos.length) {
+            this._shuffleQueue();
+            this.playing = this.videos.shift();
+            this._play();
+          } else if (this.videos.length) {
+            this.playing = this.videos.shift();
+            this._play();
           } else {
             this.playing = null;
           }
@@ -44,15 +49,53 @@ module.exports = {
       });
     }
 
-    checkUserVoice(interaction) {
-      const vc = interaction.member.voice.channel;
-      if (vc) return true;
-
-      interaction.reply({
-        content: `you must be in a vc to use this command`,
-        ephemeral: true,
+    async _play() {
+      const stream = await play.stream(this.playing.url);
+      let resource = createAudioResource(stream.stream, {
+        inputType: stream.type,
       });
-      return false;
+
+      this.player.play(resource);
+    }
+
+    async _search(query, subcommand, interaction) {
+      const youtubeResults = await play
+        .search(query, {
+          limit: 5,
+          source: {
+            youtube: subcommand,
+          },
+        })
+        .catch(() => {
+          return interaction.reply({
+            content: 'error searching youtube',
+            ephemeral: true,
+          });
+        });
+
+      if (youtubeResults.length === 0) {
+        interaction.reply({
+          content: 'no results found',
+          ephemeral: true,
+        });
+
+        return null;
+      }
+
+      return youtubeResults;
+    }
+
+    _shuffleQueue() {
+      let newVideos = [];
+      const indexes = [...Array(this.shuffleVideos.length).keys()];
+
+      while (indexes.length) {
+        const randomIndex = Math.floor(Math.random() * indexes.length);
+        newVideos.push(this.shuffleVideos[indexes[randomIndex]]);
+        indexes.splice(randomIndex, 1);
+      }
+
+      this.videos = newVideos;
     }
 
     async add(media, interaction) {
@@ -62,8 +105,8 @@ module.exports = {
       if (media.type === 'playlist') {
         content = `added **${media.videoCount}** videos from [**${media.title}**](${media.url}) to queue`;
 
-        // all_videos() doesn't work with playlists that come from play.search()
-        const playlist = await play.playlist_info(media.url);
+        // all_videos() doesn't work with playlists that come from play._search()
+        const playlist = await play.playlist_info(media.url, { incomplete: true });
         videoArray = await playlist.all_videos();
       } else if (media.type === 'video') {
         content = `added [**${media.title}**](${media.url}) to queue`;
@@ -94,17 +137,18 @@ module.exports = {
         } else {
           this.playing = this.videos[0];
         }
-        this.play();
+        this._play();
       }
     }
 
-    async play() {
-      const stream = await play.stream(this.playing.url);
-      let resource = createAudioResource(stream.stream, {
-        inputType: stream.type,
-      });
+    clear(interaction) {
+      this.videos = [];
+      this.loop.all = false;
+      this.loop.current = false;
+      this.loop.each = 0;
+      this.shuffleVideos = [];
 
-      this.player.play(resource);
+      interaction.reply('cleared the queue');
     }
 
     join(interaction, reply) {
@@ -134,31 +178,75 @@ module.exports = {
       this.connection.subscribe(this.player);
     }
 
-    async search(query, subcommand, interaction) {
-      const youtubeResults = await play
-        .search(query, {
-          limit: 5,
-          source: {
-            youtube: subcommand,
-          },
-        })
-        .catch(() => {
-          return interaction.reply({
-            content: 'error searching youtube',
-            ephemeral: true,
-          });
-        });
+    loopAll(interaction) {
+      if (this.loop.all === true) {
+        this.loop.all = false;
+        interaction.reply('turned looping all **off**');
+      } else {
+        if (this.shuffleVideos.length) {
+          this.videos = this.shuffleVideos;
+          this.shuffleVideos = [];
+          this.playing = this.videos.shift();
+        }
 
-      if (youtubeResults.length === 0) {
+        this.loop.all = true;
+        if (this.playing) this.videos.unshift(this.playing);
+        interaction.reply('turned looping all **on**');
+      }
+    }
+
+    loopCurrent(interaction) {
+      if (this.loop.current === true) {
+        this.loop.current = false;
+        interaction.reply('turned looping current **off**');
+      } else {
+        this.loop.current = true;
+        interaction.reply('turned looping current **on**');
+      }
+    }
+
+    loopEach(loopNumber, interaction) {
+      this.loop.each = loopNumber;
+      interaction.reply(`each track will now loop **${loopNumber}** times`);
+    }
+
+    loopOff(interaction) {
+      this.loop.all = false;
+      this.loop.current = false;
+      this.loop.each = 0;
+      interaction.reply('turned all looping off');
+    }
+
+    np(interaction) {
+      interaction.reply({
+        content: `now playing **${
+          this.playing ? `[${this.playing.title}](${this.playing.url})` : 'nothing'
+        }**`,
+        ephemeral: true,
+      });
+    }
+
+    pause(interaction) {
+      if (this.player.state.status === 'playing') {
+        this.player.pause();
+        interaction.reply('player is now paused');
+      } else {
         interaction.reply({
-          content: 'no results found',
+          content: 'player is not currently playing',
           ephemeral: true,
         });
-
-        return null;
       }
+    }
 
-      return youtubeResults;
+    checkUserVoice(interaction) {
+      const vc = interaction.member.voice.channel;
+      if (vc) return true;
+
+      interaction.reply({
+        content: `you must be in a vc to use this command`,
+        ephemeral: true,
+      });
+      return false;
     }
 
     async pickSong(input, subcommand, interaction) {
@@ -168,12 +256,13 @@ module.exports = {
             return 'badlink';
           });
 
-          if (video === 'badlink') return badLink();
-          if (!video) return loadError();
+          if (playlist === 'badlink') return badLink();
+          if (!playlist) return loadError();
 
           this.add(playlist, interaction);
         } else if (subcommand === 'video') {
-          const video = await play.video_basic_info(input).catch(() => {
+          const video = await play.video_basic_info(input).catch((err) => {
+            console.error(err);
             return 'badlink';
           });
 
@@ -197,8 +286,72 @@ module.exports = {
           });
         }
       } else {
-        const youtubeResults = await this.search(input, subcommand, interaction);
+        const youtubeResults = await this._search(input, subcommand, interaction);
         if (youtubeResults) interaction.songMenu = new SongMenu(interaction, youtubeResults);
+      }
+    }
+
+    remove(index, interaction) {
+      const videos = this.videos;
+      function goodIndex(checkIndex) {
+        return checkIndex < videos.length && checkIndex > 1;
+      }
+
+      const isArray = Array.isArray(index);
+      const checkArray = isArray && goodIndex(index[0]) && goodIndex(index[1]) && index[0] < index[1];
+      const checkVar = !isArray && goodIndex(index);
+
+      if (!checkArray && !checkVar) {
+        return interaction.reply({
+          content: 'not a valid index',
+          ephemeral: true,
+        });
+      }
+
+      let removed;
+      if (isArray) {
+        removed = this.videos.splice(index[0] - 1, index[1] - (index[0] - 1));
+
+        if (this.shuffleVideos.length) {
+          for (const video of removed) {
+            index = this.shuffleVideos.indexOf(video);
+            this.shuffleVideos.splice(index, 1);
+          }
+        }
+      } else {
+        [removed] = this.videos.splice(index - 1, 1);
+
+        if (this.shuffleVideos.length) {
+          index = this.shuffleVideos.indexOf(removed);
+          console.log(index);
+          this.shuffleVideos.splice(index, 1);
+        }
+      }
+
+      for (const video of this.shuffleVideos) console.log(video.title);
+
+      interaction.reply(`removed **${isArray ? `${removed.length} songs` : removed.title}** from queue`);
+    }
+
+    shuffle(interaction) {
+      if (this.shuffleVideos.length === 0 && this.videos.length) {
+        if (this.loop.all) {
+          this.loop.all = false;
+          this.playing = this.videos.shift();
+        }
+        this.shuffleVideos = this.videos;
+        this._shuffleQueue();
+        if (this.playing) this.shuffleVideos.unshift(this.playing);
+
+        interaction.reply('turned shuffle **on**');
+      } else if (this.videos.length) {
+        this.shuffleVideos = [];
+        interaction.reply('turned shuffle **off**');
+      } else {
+        return interaction.reply({
+          content: 'queue is empty',
+          ephemeral: true,
+        });
       }
     }
 
@@ -215,27 +368,6 @@ module.exports = {
       this.playing.loopCount = 0;
       this.playing = null;
       this.player.stop();
-    }
-
-    np(interaction) {
-      interaction.reply({
-        content: `now playing **${
-          this.playing ? `[${this.playing.title}](${this.playing.url})` : 'nothing'
-        }**`,
-        ephemeral: true,
-      });
-    }
-
-    pause(interaction) {
-      if (this.player.state.status === 'playing') {
-        this.player.pause();
-        interaction.reply('player is now paused');
-      } else {
-        interaction.reply({
-          content: 'player is not currently playing',
-          ephemeral: true,
-        });
-      }
     }
 
     unpause(interaction) {
@@ -287,75 +419,6 @@ module.exports = {
           ephemeral: true,
         });
       }
-    }
-
-    clear(interaction) {
-      this.videos = [];
-
-      interaction.reply('cleared the queue');
-    }
-
-    remove(index, interaction) {
-      if (index > this.videos.length) {
-        return interaction.reply({
-          content: 'not a valid index',
-          ephemeral: true,
-        });
-      }
-
-      let removed;
-      if (index.length === 1) {
-        removed = this.videos.splice(index[0] - 1, 1);
-      } else {
-        removed = this.videos.splice(index[0] - 1, index[1] - index[0] + 1);
-      }
-
-      interaction.reply(
-        `removed **${removed.length === 1 ? removed[0].title : `${removed.length} songs`}** from queue`
-      );
-    }
-
-    loopCurrent(interaction) {
-      if (this.loop.current === true) {
-        this.loop.current = false;
-        interaction.reply('turned looping current **off**');
-      } else {
-        this.loop.current = true;
-        interaction.reply('turned looping current **on**');
-      }
-    }
-
-    loopAll(interaction) {
-      if (this.loop.all === true) {
-        this.loop.all = false;
-        this.videos.splice(0, this.loop.index + 1);
-        this.loop.index = null;
-        interaction.reply('turned looping all **off**');
-      } else {
-        this.loop.all = true;
-        this.loop.index = 0;
-        if (this.playing) this.videos.unshift(this.playing);
-        interaction.reply('turned looping all **on**');
-      }
-    }
-
-    loopEach(loopNumber, interaction) {
-      this.loop.each = loopNumber;
-      interaction.reply(`each track will now loop **${loopNumber}** times`);
-    }
-
-    loopOff(interaction) {
-      this.loop.each = 0;
-      this.loop.all = false;
-      this.loop.current = false;
-      interaction.reply('turned all looping off');
-    }
-
-    shuffle(interaction) {
-      interaction.reply({
-        content: 'this doesnt do anything yet',
-        ephemeral: true,
-      });
     }
   },
 };

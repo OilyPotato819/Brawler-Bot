@@ -98,6 +98,12 @@ module.exports = {
       this.videos = newVideos;
     }
 
+    _skipSong() {
+      this.playing.loopCount = 0;
+      this.playing = null;
+      this.player.stop();
+    }
+
     async add(media, interaction) {
       let videoArray;
       let content;
@@ -147,6 +153,7 @@ module.exports = {
       this.loop.current = false;
       this.loop.each = 0;
       this.shuffleVideos = [];
+      this._skipSong();
 
       interaction.reply('cleared the queue');
     }
@@ -179,10 +186,7 @@ module.exports = {
     }
 
     loopAll(interaction) {
-      if (this.loop.all === true) {
-        this.loop.all = false;
-        interaction.reply('turned looping all **off**');
-      } else {
+      if (!this.loop.all) {
         if (this.shuffleVideos.length) {
           this.videos = this.shuffleVideos;
           this.shuffleVideos = [];
@@ -192,16 +196,19 @@ module.exports = {
         this.loop.all = true;
         if (this.playing) this.videos.unshift(this.playing);
         interaction.reply('turned looping all **on**');
+      } else {
+        this.loop.all = false;
+        interaction.reply('turned looping all **off**');
       }
     }
 
     loopCurrent(interaction) {
-      if (this.loop.current === true) {
-        this.loop.current = false;
-        interaction.reply('turned looping current **off**');
-      } else {
+      if (!this.loop.current) {
         this.loop.current = true;
         interaction.reply('turned looping current **on**');
+      } else {
+        this.loop.current = false;
+        interaction.reply('turned looping current **off**');
       }
     }
 
@@ -294,7 +301,7 @@ module.exports = {
     remove(index, interaction) {
       const videos = this.videos;
       function goodIndex(checkIndex) {
-        return checkIndex < videos.length && checkIndex > 1;
+        return checkIndex <= videos.length;
       }
 
       const isArray = Array.isArray(index);
@@ -310,7 +317,12 @@ module.exports = {
 
       let removed;
       if (isArray) {
-        removed = this.videos.splice(index[0] - 1, index[1] - (index[0] - 1));
+        if (index[0] === 0) {
+          removed = [this.playing, ...this.videos.splice(0, index[1])];
+          this._skipSong();
+        } else {
+          removed = this.videos.splice(index[0] - 1, index[1] - (index[0] - 1));
+        }
 
         if (this.shuffleVideos.length) {
           for (const video of removed) {
@@ -319,16 +331,18 @@ module.exports = {
           }
         }
       } else {
-        [removed] = this.videos.splice(index - 1, 1);
+        if (index === 0) {
+          removed = this.playing;
+          this._skipSong();
+        } else {
+          [removed] = this.videos.splice(index - 1, 1);
+        }
 
         if (this.shuffleVideos.length) {
           index = this.shuffleVideos.indexOf(removed);
-          console.log(index);
           this.shuffleVideos.splice(index, 1);
         }
       }
-
-      for (const video of this.shuffleVideos) console.log(video.title);
 
       interaction.reply(`removed **${isArray ? `${removed.length} songs` : removed.title}** from queue`);
     }
@@ -364,10 +378,7 @@ module.exports = {
       }
 
       interaction.reply(`skipped [**${this.playing.title}**](<${this.playing.url}>)`);
-
-      this.playing.loopCount = 0;
-      this.playing = null;
-      this.player.stop();
+      this._skipSong();
     }
 
     unpause(interaction) {

@@ -3,7 +3,7 @@ const { SlashCommandBuilder } = require('discord.js');
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('remove')
-    .setDescription('remove specific songs using indexes')
+    .setDescription('remove specific songs using indexes, where 0 is the song currently playing')
     .addSubcommand((subcommand) =>
       subcommand
         .setName('single')
@@ -13,7 +13,7 @@ module.exports = {
             .setName('index')
             .setDescription('index of the song you want to remove')
             .setRequired(true)
-            .setMinValue(1)
+            .setMinValue(0)
         )
     )
     .addSubcommand((subcommand) =>
@@ -25,7 +25,7 @@ module.exports = {
             .setName('start')
             .setDescription('starting index of the range')
             .setRequired(true)
-            .setMinValue(1)
+            .setMinValue(0)
         )
         .addIntegerOption((option) =>
           option.setName('end').setDescription('last index in the range').setRequired(true).setMinValue(1)

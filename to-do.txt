@@ -1,1 +1,2 @@
 - make np command better
+- make shuffle show all the songs in queue somehow so that remove command can remove them

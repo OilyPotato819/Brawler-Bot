@@ -1,12 +1,12 @@
 {
     "cookie": {
         "VISITOR_INFO1_LIVE": "CmNLidShTNY",
-        "VISITOR_PRIVACY_METADATA": "CgJDQRICGgA%3D",
+        "VISITOR_PRIVACY_METADATA": "CgJDQRIEGgAgJA%3D%3D",
         "__Secure-3PAPISID": "iOwDUngcymfQ0R-N/Ar5Fp5l2btrvIwKFM",
         "__Secure-3PSID": "aQgs3zRv16_H8Y2bPxhrTJk9TQLz8MHSzM4fmN4G0zP5sKWpDIsSj0iFQyWeRbPt-EFqFw.",
-        "LOGIN_INFO": "AFmmF2swRgIhAOOqb1RL7rp5OBkP949Z5csLUkY2hzQC01zY5ss2Xj-YAiEA6J4vkQxEIn3sjSF_65BNm4DDsxsOn3yXOUL4EqffxjE:QUQ3MjNmd0VTTXU0OXJITklsSTFYN3BpTWtCZC0zS053ZmhWQ3huOWtEclVUTXpIOVlwYWwxaFBrZjRtd3lwT3FxVDRSWjJUNGhXN0EtajF3ejNNRWRyTmNKaE5hdExId0V2ckhvaXJxVjRHYUZkOTJ5ZG5OZ2RoN08zWDhMWXBHczFqeEY3Njh0RXRuV3dWeUF3alpLUEFKOF9JYUZxclhB",
+        "LOGIN_INFO": "",
         "PREF": "tz=America.Edmonton&f6=40000000&f7=100&f5=30000",
-        "YSC": "c_enjtfclzA",
+        "YSC": "",
         "__Secure-1PSIDTS": "sidts-CjIBSAxbGRukpcBp_7ZpHWN-7z5e3jmqIROt3YtGCAxhKTiT74liAAtOpV5FCuWYAw6HwhAA",
         "__Secure-3PSIDTS": "sidts-CjIBSAxbGRukpcBp_7ZpHWN-7z5e3jmqIROt3YtGCAxhKTiT74liAAtOpV5FCuWYAw6HwhAA",
         "__Secure-3PSIDCC": "APoG2W_XJG53n_WVmYb8LJLm-l53ZLXBMI8Xu4D2_P6yeZRkzm4os1r607k1zCBnZ5OHY1LSOA",
@@ -17,8 +17,15 @@
         "SameSite": "none",
         "GPS": "1",
         "Domain": ".youtube.com",
-        "Expires": "Sun, 17-Sep-2023 23:44:25 GMT",
-        "Path": "/"
+        "Expires": "Thu, 16-Sep-2021 21:18:13 GMT",
+        "Path": "/",
+        "SID": "",
+        "HSID": "",
+        "SSID": "",
+        "APISID": "",
+        "SAPISID": "",
+        "__Secure-1PSID": "",
+        "__Secure-1PAPISID": ""
     },
     "file": true
 }

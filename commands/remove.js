@@ -28,7 +28,11 @@ module.exports = {
             .setMinValue(0)
         )
         .addIntegerOption((option) =>
-          option.setName('end').setDescription('last index in the range').setRequired(true).setMinValue(1)
+          option
+            .setName('end')
+            .setDescription('last index in the range')
+            .setRequired(true)
+            .setMinValue(1)
         )
     ),
   async execute(interaction) {
@@ -40,8 +44,6 @@ module.exports = {
     } else if (subcommand === 'range') {
       index = [interaction.options.getInteger('start'), interaction.options.getInteger('end')];
     }
-
-    if (!queue) return;
 
     queue.remove(index, interaction);
   },

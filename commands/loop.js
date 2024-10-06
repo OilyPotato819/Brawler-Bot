@@ -14,19 +14,23 @@ module.exports = {
         .addIntegerOption((option) =>
           option
             .setName('loop-number')
-            .setDescription('number of times each song should loop, where 0 means it just plays once')
+            .setDescription(
+              'number of times each song should loop, where 0 means it just plays once'
+            )
             .setMinValue(0)
             .setRequired(true)
         )
     )
-    .addSubcommand((subcommand) => subcommand.setName('all').setDescription('toggle looping everything'))
-    .addSubcommand((subcommand) => subcommand.setName('off').setDescription('turn all looping off')),
+    .addSubcommand((subcommand) =>
+      subcommand.setName('all').setDescription('toggle looping everything')
+    )
+    .addSubcommand((subcommand) =>
+      subcommand.setName('off').setDescription('turn all looping off')
+    ),
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     const loopNumber = interaction.options.getInteger('loop-number');
     const queue = interaction.client.queueHandler.getQueue(interaction);
-
-    if (!queue) return;
 
     if (subcommand === 'current') {
       queue.loopCurrent(interaction);

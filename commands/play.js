@@ -7,7 +7,7 @@ module.exports = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName('video')
-        .setDescription('play a video using link or query')
+        .setDescription('add a video to the queue using a link or query')
         .addStringOption((option) =>
           option.setName('input').setDescription('link or query').setRequired(true)
         )
@@ -15,19 +15,16 @@ module.exports = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName('playlist')
-        .setDescription('play a playlist using link or query')
+        .setDescription('add a playlist to the queue using a link or query')
         .addStringOption((option) =>
           option.setName('input').setDescription('link or query').setRequired(true)
         )
     ),
   async execute(interaction) {
     const input = interaction.options.getString('input');
-    const subcommand = interaction.options.getSubcommand();
+    const mediaType = interaction.options.getSubcommand();
     const queue = interaction.client.queueHandler.getQueue(interaction);
 
-    if (!queue) return;
-
-    const hasVoice = queue.checkUserVoice(interaction);
-    if (hasVoice) queue.pickSong(input, subcommand, interaction);
+    queue.play(interaction, input, mediaType);
   },
 };

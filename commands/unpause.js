@@ -5,8 +5,6 @@ module.exports = {
   async execute(interaction) {
     const queue = interaction.client.queueHandler.getQueue(interaction);
 
-    if (!queue) return;
-
     queue.unpause(interaction);
   },
 };

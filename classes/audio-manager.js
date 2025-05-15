@@ -18,11 +18,11 @@ class AudioManager {
 
   createListeners() {
     this.player.on(AudioPlayerStatus.Idle, () => {
-      const nextSong = this.queue.nextSong();
+      const nextVideo = this.queue.nextVideo();
 
-      if (nextSong) {
-        this.playing = nextSong;
-        this.playURL(nextSong.url);
+      if (nextVideo) {
+        this.playing = nextVideo;
+        this.playURL(nextVideo.url);
       } else {
         this.playing = null;
       }
@@ -30,7 +30,7 @@ class AudioManager {
 
     this.queue.on('queueStarted', () => {
       if (!this.playing) {
-        this.playing = this.queue.nextSong();
+        this.playing = this.queue.nextVideo();
         this.playURL(this.playing.url);
       }
     });
@@ -59,6 +59,10 @@ class AudioManager {
     const resource = createAudioResource(stream.stdout);
 
     this.player.play(resource);
+  }
+
+  inVoiceChannel(id) {
+    return id === this.connection?.joinConfig.channelId;
   }
 }
 

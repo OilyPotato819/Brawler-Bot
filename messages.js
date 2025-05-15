@@ -1,26 +1,45 @@
-class CustomError extends Error {
-  constructor(message) {
-    super(message);
-    this.name = 'CustomError';
-    this.messageObject = createMessage(message, true);
+class ErrorMessage extends Error {
+  constructor(messageObject) {
+    super(messageObject.content);
+
+    this.name = 'ErrorMessage';
+    this.messageObject = messageObject;
   }
 }
 
-function createMessage(content, ephemeral) {
-  return { content, ephemeral };
-}
-
-const replies = {
-  joinCall: (channelName) => createMessage(`joined **${channelName}**`, false),
-  addVideo: (title, url) => createMessage(`added [**${title}**](${url}) to queue`, false),
+const messages = {
+  joinCall: (channelName) => ({
+    content: `joined **${channelName}**`,
+    ephemeral: false,
+  }),
+  addVideo: (title, url) => ({
+    content: `added [**${title}**](${url}) to queue`,
+    ephemeral: false,
+  }),
+  genericError: () => ({
+    content: 'There was an error while executing this command',
+    ephemeral: true,
+  }),
+  noVoice: () => ({
+    content: 'you must be in a vc to use this command',
+    ephemeral: true,
+  }),
+  alreadyInVoice: () => ({
+    content: 'already in your voice channel',
+    ephemeral: true,
+  }),
+  noYoutubeId: (url) => ({
+    content: `could not find an id in **${url}**`,
+    ephemeral: true,
+  }),
+  searchError: (query) => ({
+    content: `error getting search results for query **${query}**`,
+    ephemeral: true,
+  }),
+  videoInfoError: () => ({
+    content: `error fetching video info`,
+    ephemeral: true,
+  }),
 };
 
-const errors = {
-  noVoice: new CustomError('you must be in a vc to use this command'),
-  alreadyInVoice: new CustomError('already in your voice channel'),
-  invalidLink: (url) => new CustomError(`${url} is not a valid link`),
-  videoId: (url) => new CustomError(`could not find an id in ${url}`),
-  videoInfo: (id) => new CustomError(`error fetching video info for ID ${id}`),
-};
-
-module.exports = { replies, errors, CustomError };
+module.exports = { messages, ErrorMessage };

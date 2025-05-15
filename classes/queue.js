@@ -3,19 +3,19 @@ const EventEmitter = require('events');
 class Queue extends EventEmitter {
   constructor() {
     super();
-    this.songs = [];
+    this.videos = [];
   }
 
-  addSong(song) {
-    this.songs.push(song);
+  add(video) {
+    this.videos.push(video);
 
-    if (this.songs.length === 1) {
+    if (this.videos.length === 1) {
       this.emit('queueStarted');
     }
   }
 
-  nextSong() {
-    return this.songs.shift();
+  next() {
+    return this.videos.shift();
   }
 }
 

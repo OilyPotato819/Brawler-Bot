@@ -5,6 +5,7 @@
     "discord.js": "^14.16.2",
     "dotenv": "^16.4.5",
     "ffmpeg-static": "^5.2.0",
+    "googleapis": "^148.0.0",
     "libsodium-wrappers": "^0.7.15",
     "opusscript": "^0.0.8",
     "youtube-dl-exec": "^3.0.9",

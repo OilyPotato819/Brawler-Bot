@@ -1,5 +1,5 @@
 const { Events } = require('discord.js');
-const { CustomError } = require('../messages.js');
+const { messages, ErrorMessage } = require('../messages.js');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -13,15 +13,7 @@ module.exports = {
     } catch (error) {
       console.error(error);
 
-      let message;
-      if (error instanceof CustomError) {
-        message = error.messageObject;
-      } else {
-        message = {
-          content: 'There was an error while executing this command!',
-          ephemeral: true,
-        };
-      }
+      const message = error instanceof ErrorMessage ? error.messageObject : messages.genericError();
 
       if (interaction.replied) {
         interaction.editReply(message);

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { replies } = require('../messages.js');
+const { messages, ErrorMessage } = require('../messages.js');
 const getResults = require('../classes/video.js');
 const VideoPicker = require('../classes/video-picker.js');
 
@@ -25,17 +25,16 @@ module.exports = {
     ),
   async execute(interaction) {
     const memberVoice = interaction.member.voice.channel;
-    if (!memberVoice) throw errors.noVoice;
+    if (!memberVoice) throw new ErrorMessage(messages.noVoice());
 
     const input = interaction.options.getString('input');
     const mediaType = interaction.options.getSubcommand();
     const audioManager = interaction.client.audioManagerRegistry.get(interaction.guildId);
-    const clientVoiceId = audioManager.connection?.joinConfig.channelId;
 
-    if (clientVoiceId != memberVoice.id) audioManager.join(memberVoice);
+    if (!audioManager.inVoiceChannel(memberVoice.id)) audioManager.join(memberVoice);
 
     if (mediaType === 'video') {
-      await interaction.deferReply({ ephemeral: true });
+      const deferPromise = interaction.deferReply({ ephemeral: true });
 
       const results = await getResults(input);
 
@@ -43,7 +42,7 @@ module.exports = {
       if (Array.isArray(results)) {
         const videoPicker = new VideoPicker(results);
       } else {
-        audioManager.addVideo(video);
+        audioManager.queue.add(video);
       }
 
       // queue.addVideo(video);

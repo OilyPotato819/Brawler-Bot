@@ -10,7 +10,7 @@ module.exports = {
     }
 
     const audioManager = interaction.client.audioManagerRegistry.get(interaction.guildId);
-    if (audioManager.inVoiceChannel(memberVoice.id)) {
+    if (audioManager.inVC(memberVoice.id)) {
       throw new ErrorMessage(messages.alreadyInVoice());
     }
 

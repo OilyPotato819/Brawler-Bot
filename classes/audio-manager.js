@@ -18,22 +18,22 @@ class AudioManager {
 
   createListeners() {
     this.player.on(AudioPlayerStatus.Idle, () => {
-      const nextVideo = this.queue.nextVideo();
+      const next = this.queue.next();
 
-      if (nextVideo) {
-        this.playing = nextVideo;
-        this.playURL(nextVideo.url);
+      if (next) {
+        this.streamAudio(next);
       } else {
         this.playing = null;
       }
     });
+  }
 
-    this.queue.on('queueStarted', () => {
-      if (!this.playing) {
-        this.playing = this.queue.nextVideo();
-        this.playURL(this.playing.url);
-      }
-    });
+  play(video) {
+    if (this.playing) {
+      this.queue.add(video);
+    } else {
+      this.streamAudio(video);
+    }
   }
 
   join(channel) {
@@ -49,19 +49,20 @@ class AudioManager {
     this.connection.subscribe(this.player);
   }
 
-  playURL(url) {
-    const stream = ytdl.exec(url, {
+  streamAudio(video) {
+    this.playing = video;
+
+    const stream = ytdl.exec(video.url, {
       extractAudio: true,
       audioFormat: 'mp3',
       output: '-',
     });
 
     const resource = createAudioResource(stream.stdout);
-
     this.player.play(resource);
   }
 
-  inVoiceChannel(id) {
+  inVC(id) {
     return id === this.connection?.joinConfig.channelId;
   }
 }

@@ -1,17 +1,10 @@
-const EventEmitter = require('events');
-
-class Queue extends EventEmitter {
+class Queue {
   constructor() {
-    super();
     this.videos = [];
   }
 
   add(video) {
     this.videos.push(video);
-
-    if (this.videos.length === 1) {
-      this.emit('queueStarted');
-    }
   }
 
   next() {

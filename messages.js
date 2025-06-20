@@ -36,8 +36,16 @@ const messages = {
     content: `error getting search results for query **${query}**`,
     ephemeral: true,
   }),
+  noResults: (query) => ({
+    content: `couldn't find any results for query **${query}**`,
+    ephemeral: true,
+  }),
   videoInfoError: () => ({
     content: `error fetching video info`,
+    ephemeral: true,
+  }),
+  noVideoInfo: () => ({
+    content: `couldn't get any video info`,
     ephemeral: true,
   }),
 };

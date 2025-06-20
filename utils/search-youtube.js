@@ -42,6 +42,8 @@ async function searchYoutube(query, type) {
         throw new ErrorMessage(messages.searchError(query));
       });
 
+    if (!searchResponse.data.items.length) throw new ErrorMessage(messages.noResults(query));
+
     for (const item of searchResponse.data.items) {
       youtubeIds.push(item.id[`${type}Id`]);
     }
@@ -55,6 +57,8 @@ async function searchYoutube(query, type) {
     .catch(() => {
       throw new ErrorMessage(messages.videoInfoError());
     });
+
+  if (!listResponse.data.items.length) throw new ErrorMessage(messages.noVideoInfo());
 
   let resources = [];
   for (const item of listResponse.data.items) {

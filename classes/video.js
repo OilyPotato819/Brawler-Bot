@@ -1,11 +1,25 @@
+const dedent = require('dedent');
+const { getAge, formatDuration } = require('../utils/luxon-utils');
+const formatNum = new Intl.NumberFormat('en-US', { notation: 'compact' }).format;
+
 class Video {
   constructor(info) {
     this.id = info.id;
+    this.url = `https://www.youtube.com/watch?v=${this.id}`;
     this.title = info.snippet.title;
     this.channel = info.snippet.channelTitle;
-    this.duration = info.contentDetails.duration;
-    this.viewCount = info.statistics.viewCount;
-    this.likeCount = info.statistics.likeCount;
+    this.age = getAge(info.snippet.publishedAt);
+    this.duration = formatDuration(info.contentDetails.duration);
+    this.viewCount = formatNum(info.statistics.viewCount);
+    this.likeCount = formatNum(info.statistics.likeCount);
+  }
+
+  listItem(num) {
+    return dedent`
+      ${num}. [${this.title}](<${this.url}>)  
+        ${this.channel}  
+        ${this.duration}  •  ${this.viewCount}  •  ${this.age}
+    `;
   }
 }
 

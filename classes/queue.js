@@ -3,8 +3,8 @@ class Queue {
     this.videos = [];
   }
 
-  add(video) {
-    this.videos.push(video);
+  add(videos) {
+    this.videos.push(...videos);
   }
 
   next() {

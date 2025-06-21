@@ -1,5 +1,5 @@
 const { Events } = require('discord.js');
-const { messages, ErrorMessage } = require('../messages.js');
+const { messageFactory, ErrorMessage } = require('../messages.js');
 
 module.exports = {
   name: Events.InteractionCreate,
@@ -13,7 +13,8 @@ module.exports = {
     } catch (error) {
       console.error(error);
 
-      const message = error instanceof ErrorMessage ? error.messageObject : messages.genericError();
+      const message =
+        error instanceof ErrorMessage ? error.messageObject : messageFactory.genericError();
 
       if (interaction.replied) {
         interaction.editReply(message);

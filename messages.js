@@ -7,47 +7,77 @@ class ErrorMessage extends Error {
   }
 }
 
-const messages = {
-  joinCall: (channelName) => ({
-    content: `joined **${channelName}**`,
+function createMessage(content, ephemeral) {
+  return {
+    content,
+    ephemeral,
+    embeds: [],
+    components: [],
+  };
+}
+
+const messageFactory = {
+  joinCall: {
+    content: (channelName) => `joined **${channelName}**`,
     ephemeral: false,
-  }),
-  addVideo: (title, url) => ({
-    content: `added [**${title}**](${url}) to queue`,
+  },
+  addVideo: {
+    content: (userId, title, url) => `<@${userId}> added [**${title}**](${url}) to queue`,
     ephemeral: false,
-  }),
-  genericError: () => ({
-    content: 'There was an error while executing this command',
+  },
+  addPlaylist: {
+    content: (userId, videoCount) => `<@${userId}> added **${videoCount} videos** to queue`,
+    ephemeral: false,
+  },
+  genericError: {
+    content: () => 'There was an error while executing this command',
     ephemeral: true,
-  }),
-  noVoice: () => ({
-    content: 'you must be in a vc to use this command',
+  },
+  noVoice: {
+    content: () => 'you must be in a vc to use this command',
     ephemeral: true,
-  }),
-  alreadyInVoice: () => ({
-    content: 'already in your voice channel',
+  },
+  alreadyInVoice: {
+    content: () => 'already in your voice channel',
     ephemeral: true,
-  }),
-  noYoutubeId: (url) => ({
-    content: `could not find an id in **${url}**`,
+  },
+  noYoutubeId: {
+    content: (url) => `could not find an id in **${url}**`,
     ephemeral: true,
-  }),
-  searchError: (query) => ({
-    content: `error getting search results for query **${query}**`,
+  },
+  searchError: {
+    content: (query) => `error getting search results for query **${query}**`,
     ephemeral: true,
-  }),
-  noResults: (query) => ({
-    content: `couldn't find any results for query **${query}**`,
+  },
+  noResults: {
+    content: (query) => `couldn't find any results for query **${query}**`,
     ephemeral: true,
-  }),
-  videoInfoError: () => ({
-    content: `error fetching video info`,
+  },
+  getInfoError: {
+    content: (type) => `error fetching ${type} info`,
     ephemeral: true,
-  }),
-  noVideoInfo: () => ({
-    content: `couldn't get any video info`,
+  },
+  getVideosError: {
+    content: () => 'error getting playlist videos',
     ephemeral: true,
-  }),
+  },
+  emptyPlaylist: {
+    content: () => 'this playlist has no videos',
+    ephemeral: true,
+  },
+  tooLong: {
+    content: () => 'you took too long',
+    ephemeral: true,
+  },
 };
 
-module.exports = { messages, ErrorMessage };
+for (const [key, message] of Object.entries(messageFactory)) {
+  messageFactory[key] = (...args) => ({
+    content: message.content(...args),
+    ephemeral: message.ephemeral,
+    embeds: [],
+    components: [],
+  });
+}
+
+module.exports = { messageFactory, ErrorMessage };

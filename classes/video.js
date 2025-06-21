@@ -11,7 +11,9 @@ class Video {
     this.age = getAge(info.snippet.publishedAt);
     this.duration = formatDuration(info.contentDetails.duration);
     this.viewCount = formatNum(info.statistics.viewCount);
-    this.likeCount = formatNum(info.statistics.likeCount);
+
+    const likeCount = info.statistics.likeCount;
+    this.likeCount = likeCount ? formatNum(likeCount) : null;
   }
 
   listItem(num) {

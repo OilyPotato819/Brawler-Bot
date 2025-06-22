@@ -1,6 +1,6 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { messageFactory, ErrorMessage } = require('../messages.js');
-const { searchYoutube } = require('../utils/youtube-utils.js');
+const { searchYoutube, getPlaylistVideos } = require('../utils/youtube-utils.js');
 const ContentPicker = require('../classes/content-picker.js');
 
 module.exports = {
@@ -36,16 +36,24 @@ module.exports = {
       content = await contentPicker.getChoice(interaction);
     }
 
+    let videoArray;
+    let message;
+    if (contentType === 'video') {
+      videoArray = [content];
+      message = messageFactory.addVideo(interaction.user.id, content.title, content.url);
+    } else if (contentType === 'playlist') {
+      videoArray = await getPlaylistVideos(content.id);
+      message = messageFactory.addPlaylist(
+        interaction.user.id,
+        content.videoCount,
+        content.title,
+        content.url
+      );
+    }
+
     if (!audioManager.inVC(memberVoice.id)) audioManager.join(memberVoice);
     interaction.deleteReply();
-
-    if (contentType === 'video') {
-      audioManager.play(content);
-      interaction.channel.send(
-        messageFactory.addVideo(interaction.user.id, content.title, content.url)
-      );
-    } else if (contentType === 'playlist') {
-      console.log(content);
-    }
+    interaction.channel.send(message);
+    audioManager.play(videoArray);
   },
 };

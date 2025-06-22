@@ -7,26 +7,18 @@ class ErrorMessage extends Error {
   }
 }
 
-function createMessage(content, ephemeral) {
-  return {
-    content,
-    ephemeral,
-    embeds: [],
-    components: [],
-  };
-}
-
 const messageFactory = {
   joinCall: {
-    content: (channelName) => `joined **${channelName}**`,
+    content: (channelId) => `joined <#${channelId}>`,
     ephemeral: false,
   },
   addVideo: {
-    content: (userId, title, url) => `<@${userId}> added [**${title}**](${url}) to queue`,
+    content: (userId, title, url) => `<@${userId}> added **${title}** to queue[⠀](${url})`,
     ephemeral: false,
   },
   addPlaylist: {
-    content: (userId, videoCount) => `<@${userId}> added **${videoCount} videos** to queue`,
+    content: (userId, videoCount, title, url) =>
+      `<@${userId}> added **${videoCount} videos** from **${title}** to queue[⠀](${url})`,
     ephemeral: false,
   },
   genericError: {

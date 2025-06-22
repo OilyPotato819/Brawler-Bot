@@ -42,6 +42,8 @@ class ContentPicker {
       throw new ErrorMessage(messageFactory.tooLong());
     });
 
+    confirmation.deferUpdate();
+
     const choiceIndex = +confirmation.values[0];
     return this.options[choiceIndex];
   }

@@ -15,6 +15,6 @@ module.exports = {
     }
 
     audioManager.join(memberVoice);
-    interaction.reply(messageFactory.joinCall(memberVoice.name));
+    interaction.reply(messageFactory.joinCall(memberVoice.id));
   },
 };

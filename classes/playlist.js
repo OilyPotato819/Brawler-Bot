@@ -6,14 +6,14 @@ class Playlist {
     this.url = `https://www.youtube.com/playlist?list=${this.id}`;
     this.title = info.snippet.title;
     this.channel = info.snippet.channelTitle;
-    this.itemCount = info.contentDetails.itemCount;
+    this.videoCount = info.contentDetails.itemCount;
   }
 
   listItem(num) {
     return dedent`
       ${num}. [${this.title}](<${this.url}>)  
         ${this.channel}  
-        ${this.itemCount} videos
+        ${this.videoCount} videos
     `;
   }
 }

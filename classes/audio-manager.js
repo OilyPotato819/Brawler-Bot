@@ -28,21 +28,17 @@ class AudioManager {
     });
   }
 
-  play(videos) {
-    if (!Array.isArray(videos)) {
-      videos = [videos];
-    }
-
-    if (!videos.length) return;
+  play(videoArray) {
+    if (!videoArray.length) return;
 
     if (this.playing) {
-      this.queue.add(videos);
+      this.queue.add(videoArray);
       return;
     }
 
-    this.streamAudio(videos[0]);
+    this.streamAudio(videoArray[0]);
 
-    if (videos.length > 1) this.queue.add(videos.slice(1));
+    if (videoArray.length > 1) this.queue.add(videoArray.slice(1));
   }
 
   join(channel) {

@@ -1,3 +1,5 @@
+const { MessageFlags } = require('discord.js');
+
 class ErrorMessage extends Error {
   constructor(messageObject) {
     super(messageObject.content);
@@ -19,6 +21,10 @@ const messageFactory = {
   addPlaylist: {
     content: (userId, videoCount, title, url) =>
       `<@${userId}> added **${videoCount} videos** from **${title}** to queue[⠀](${url})`,
+    ephemeral: false,
+  },
+  clearedQueue: {
+    content: () => 'cleared the queue',
     ephemeral: false,
   },
   genericError: {
@@ -61,14 +67,29 @@ const messageFactory = {
     content: () => 'you took too long',
     ephemeral: true,
   },
+  emptyQueue: {
+    content: () => 'the queue is already empty',
+    ephemeral: true,
+  },
+  nowPlaying: {
+    content: (duration, likeCount, viewCount, age, url) =>
+      `:hourglass:  ${duration}   •   :thumbsup:  ${likeCount}   •   :eye:  ${viewCount}   •   :calendar_spiral:  ${age}[⠀](${url})`,
+    ephemeral: true,
+  },
+  nothingPlaying: {
+    content: () => 'nothing is playing right now',
+    ephemeral: true,
+  },
 };
 
 for (const [key, message] of Object.entries(messageFactory)) {
+  const flags = messageFactory[key]?.ephemeral ? MessageFlags.Ephemeral : undefined;
   messageFactory[key] = (...args) => ({
     content: message.content(...args),
-    ephemeral: message.ephemeral,
+    flags,
     embeds: [],
     components: [],
+    allowedMentions: { parse: [] },
   });
 }
 

@@ -38,13 +38,13 @@ class ContentPicker {
       components: [row],
     });
 
-    const confirmation = await message.awaitMessageComponent({ time: 60_000 }).catch(() => {
+    const selectInteraction = await message.awaitMessageComponent({ time: 60_000 }).catch(() => {
       throw new ErrorMessage(messageFactory.tooLong());
     });
 
-    confirmation.deferUpdate();
+    selectInteraction.deferUpdate();
 
-    const choiceIndex = +confirmation.values[0];
+    const choiceIndex = +selectInteraction.values[0];
     return this.options[choiceIndex];
   }
 }

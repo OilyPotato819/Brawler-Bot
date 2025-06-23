@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags } = require('discord.js');
 const { messageFactory, ErrorMessage } = require('../messages.js');
 const { searchYoutube, getPlaylistVideos } = require('../utils/youtube-utils.js');
 const ContentPicker = require('../classes/content-picker.js');
@@ -24,7 +24,7 @@ module.exports = {
     const contentType = interaction.options.getString('type') ?? 'video';
     const audioManager = interaction.client.audioManagerRegistry.get(interaction.guildId);
 
-    const deferPromise = interaction.deferReply({ ephemeral: true });
+    const deferPromise = interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const results = await searchYoutube(input, contentType);
     await deferPromise;
 

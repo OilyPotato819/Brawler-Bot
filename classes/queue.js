@@ -10,6 +10,14 @@ class Queue {
   next() {
     return this.videos.shift();
   }
+
+  clear() {
+    this.videos = [];
+  }
+
+  length() {
+    return this.videos.length;
+  }
 }
 
 module.exports = Queue;

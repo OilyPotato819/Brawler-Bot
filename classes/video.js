@@ -20,7 +20,7 @@ class Video {
     return dedent`
       ${num}. [${this.title}](<${this.url}>)  
         ${this.channel}  
-        ${this.duration}  •  ${this.viewCount}  •  ${this.age}
+        :hourglass:  ${this.duration}   •   :thumbsup:  ${this.likeCount}   •   :eye:  ${this.viewCount}   •   :calendar_spiral:  ${this.age}
     `;
   }
 }

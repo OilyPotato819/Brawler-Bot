@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, MessageFlags, SectionBuilder, ButtonStyle } = require('discord.js');
 const { messageFactory, ErrorMessage } = require('../messages.js');
 const { searchYoutube, getPlaylistVideos } = require('../utils/youtube-utils.js');
 const ContentPicker = require('../classes/content-picker.js');
@@ -36,24 +36,31 @@ module.exports = {
       content = await contentPicker.getChoice(interaction);
     }
 
+    const userId = interaction.user.id;
     let videoArray;
-    let message;
+    let messageContent;
     if (contentType === 'video') {
       videoArray = [content];
-      message = messageFactory.addVideo(interaction.user.id, content.title, content.url);
+      messageContent = messageFactory.addVideo(userId, content.title);
     } else if (contentType === 'playlist') {
       videoArray = await getPlaylistVideos(content.id);
-      message = messageFactory.addPlaylist(
-        interaction.user.id,
-        content.videoCount,
-        content.title,
-        content.url
-      );
+      messageContent = messageFactory.addPlaylist(userId, content.videoCount, content.title);
     }
 
     if (!audioManager.inVC(memberVoice.id)) audioManager.join(memberVoice);
-    interaction.deleteReply();
-    interaction.channel.send(message);
     audioManager.play(videoArray);
+
+    const section = new SectionBuilder()
+      .addTextDisplayComponents((textDisplay) => textDisplay.setContent(messageContent))
+      .setButtonAccessory((button) =>
+        button.setLabel('Link').setURL(content.url).setStyle(ButtonStyle.Link)
+      );
+
+    interaction.deleteReply();
+    interaction.channel.send({
+      components: [section],
+      flags: MessageFlags.IsComponentsV2,
+      allowedMentions: { parse: [] },
+    });
   },
 };

@@ -14,21 +14,15 @@ const messageFactory = {
     content: (channelId) => `joined <#${channelId}>`,
     ephemeral: false,
   },
-  addVideo: {
-    content: (userId, title, url) => `<@${userId}> added **${title}** to queue[⠀](${url})`,
-    ephemeral: false,
-  },
-  addPlaylist: {
-    content: (userId, videoCount, title, url) =>
-      `<@${userId}> added **${videoCount} videos** from **${title}** to queue[⠀](${url})`,
-    ephemeral: false,
-  },
+  addVideo: (userId, title) => `<@${userId}> added **${title}** to queue`,
+  addPlaylist: (userId, videoCount, title) =>
+    `<@${userId}> added **${videoCount} videos** from **${title}** to queue`,
   clearedQueue: {
     content: () => 'cleared the queue',
     ephemeral: false,
   },
   genericError: {
-    content: () => 'There was an error while executing this command',
+    content: () => 'there was an error while executing this command',
     ephemeral: true,
   },
   noVoice: {
@@ -71,11 +65,6 @@ const messageFactory = {
     content: () => 'the queue is already empty',
     ephemeral: true,
   },
-  nowPlaying: {
-    content: (duration, likeCount, viewCount, age, url) =>
-      `:hourglass:  ${duration}   •   :thumbsup:  ${likeCount}   •   :eye:  ${viewCount}   •   :calendar_spiral:  ${age}[⠀](${url})`,
-    ephemeral: true,
-  },
   nothingPlaying: {
     content: () => 'nothing is playing right now',
     ephemeral: true,
@@ -83,6 +72,8 @@ const messageFactory = {
 };
 
 for (const [key, message] of Object.entries(messageFactory)) {
+  if (typeof message !== 'object') continue;
+
   const flags = messageFactory[key]?.ephemeral ? MessageFlags.Ephemeral : undefined;
   messageFactory[key] = (...args) => ({
     content: message.content(...args),

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, StringSelectMenuOptionBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
 const { messageFactory } = require('../messages.js');
 
 module.exports = {
@@ -8,16 +8,33 @@ module.exports = {
   async execute(interaction) {
     const playing = interaction.client.audioManagerRegistry.get(interaction.guildId).playing;
 
-    const message = playing
-      ? messageFactory.nowPlaying(
-          playing.duration,
-          playing.likeCount,
-          playing.viewCount,
-          playing.age,
-          playing.url
-        )
-      : messageFactory.nothingPlaying();
+    if (!playing) {
+      interaction.reply(messageFactory.nothingPlaying());
+      return;
+    }
 
-    interaction.reply(message);
+    const embed = new EmbedBuilder()
+      .setColor(0xbfda34)
+      .setTitle('Some title')
+      .setURL('https://discord.js.org/')
+      .setAuthor({
+        name: 'Some name',
+        iconURL: 'https://i.imgur.com/AfFp7pu.png',
+        url: 'https://discord.js.org',
+      })
+      .setDescription('Some description here')
+      .setThumbnail('https://i.imgur.com/AfFp7pu.png')
+      .addFields(
+        { name: 'Regular field title', value: 'Some value here' },
+        { name: '\u200B', value: '\u200B' },
+        { name: 'Inline field title', value: 'Some value here', inline: true },
+        { name: 'Inline field title', value: 'Some value here', inline: true }
+      )
+      .addFields({ name: 'Inline field title', value: 'Some value here', inline: true })
+      .setImage('https://i.imgur.com/AfFp7pu.png')
+      .setTimestamp()
+      .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/AfFp7pu.png' });
+
+    interaction.reply({ flags: MessageFlags.Ephemeral, embeds: [embed] });
   },
 };

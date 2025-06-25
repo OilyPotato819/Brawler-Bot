@@ -23,6 +23,8 @@ const config = {
 };
 
 async function getYoutubeInfo(ids, type) {
+  if (!config[type]) throw new Error(`Invalid type: ${type}`);
+
   const listResponse = await youtube[`${type}s`]
     .list({
       part: config[type].part,
@@ -92,4 +94,18 @@ async function getPlaylistVideos(playlistId) {
   return videos;
 }
 
-module.exports = { searchYoutube, getPlaylistVideos };
+async function getChannelThumbnail(id) {
+  const listResponse = await youtube.channels
+    .list({
+      part: 'snippet',
+      id,
+    })
+    .catch(() => {
+      throw new ErrorMessage(messageFactory.getInfoError('channel'));
+    });
+
+  const item = listResponse.data.items[0];
+  return item.snippet.thumbnails.default.url;
+}
+
+module.exports = { searchYoutube, getPlaylistVideos, getChannelThumbnail };

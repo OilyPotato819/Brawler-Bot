@@ -10,13 +10,15 @@ class ErrorMessage extends Error {
 }
 
 const messageFactory = {
+  addVideo: (userId, title) => `<@${userId}> added **${title}** to queue`,
+  addPlaylist: (userId, videoCount, title) =>
+    `<@${userId}> added **${videoCount} videos** from **${title}** to queue`,
+  videoInfo: (duration, viewCount, age) =>
+    `⌛  ${duration}   •   👁️  ${viewCount}   •   🗓️  ${age}`,
   joinCall: {
     content: (channelId) => `joined <#${channelId}>`,
     ephemeral: false,
   },
-  addVideo: (userId, title) => `<@${userId}> added **${title}** to queue`,
-  addPlaylist: (userId, videoCount, title) =>
-    `<@${userId}> added **${videoCount} videos** from **${title}** to queue`,
   clearedQueue: {
     content: () => 'cleared the queue',
     ephemeral: false,

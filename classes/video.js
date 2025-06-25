@@ -1,4 +1,6 @@
 const dedent = require('dedent');
+const { messageFactory } = require('../messages.js');
+const Channel = require('./channel.js');
 const { getAge, formatDuration } = require('../utils/luxon-utils');
 const formatNum = new Intl.NumberFormat('en-US', { notation: 'compact' }).format;
 
@@ -7,20 +9,18 @@ class Video {
     this.id = info.id;
     this.url = `https://www.youtube.com/watch?v=${this.id}`;
     this.title = info.snippet.title;
-    this.channel = info.snippet.channelTitle;
     this.age = getAge(info.snippet.publishedAt);
     this.duration = formatDuration(info.contentDetails.duration);
     this.viewCount = formatNum(info.statistics.viewCount);
-
-    const likeCount = info.statistics.likeCount;
-    this.likeCount = likeCount ? formatNum(likeCount) : null;
+    this.thumbnail = info.snippet.thumbnails.medium.url;
+    this.channel = new Channel(info);
   }
 
   listItem(num) {
     return dedent`
       ${num}. [${this.title}](<${this.url}>)  
-        ${this.channel}  
-        :hourglass:  ${this.duration}   •   :thumbsup:  ${this.likeCount}   •   :eye:  ${this.viewCount}   •   :calendar_spiral:  ${this.age}
+        ${this.channel.title}  
+        ${messageFactory.videoInfo(this.duration, this.viewCount, this.age)}
     `;
   }
 }

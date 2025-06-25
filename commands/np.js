@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
+const { getChannelThumbnail } = require('../utils/youtube-utils.js');
 const { messageFactory } = require('../messages.js');
 
 module.exports = {
@@ -6,34 +7,31 @@ module.exports = {
     .setName('np')
     .setDescription('displays the song currently playing'),
   async execute(interaction) {
-    const playing = interaction.client.audioManagerRegistry.get(interaction.guildId).playing;
+    const playing = interaction.client.audioManagerRegistry.get(
+      interaction.guildId
+    ).playing;
 
     if (!playing) {
       interaction.reply(messageFactory.nothingPlaying());
       return;
     }
 
+    const channel = playing.channel;
+    channel.thumbnail ??= await getChannelThumbnail(channel.id);
+
     const embed = new EmbedBuilder()
       .setColor(0xbfda34)
-      .setTitle('Some title')
-      .setURL('https://discord.js.org/')
       .setAuthor({
-        name: 'Some name',
-        iconURL: 'https://i.imgur.com/AfFp7pu.png',
-        url: 'https://discord.js.org',
+        name: channel.title,
+        iconURL: channel.thumbnail,
+        url: channel.url,
       })
-      .setDescription('Some description here')
-      .setThumbnail('https://i.imgur.com/AfFp7pu.png')
-      .addFields(
-        { name: 'Regular field title', value: 'Some value here' },
-        { name: '\u200B', value: '\u200B' },
-        { name: 'Inline field title', value: 'Some value here', inline: true },
-        { name: 'Inline field title', value: 'Some value here', inline: true }
-      )
-      .addFields({ name: 'Inline field title', value: 'Some value here', inline: true })
-      .setImage('https://i.imgur.com/AfFp7pu.png')
-      .setTimestamp()
-      .setFooter({ text: 'Some footer text here', iconURL: 'https://i.imgur.com/AfFp7pu.png' });
+      .setTitle(playing.title)
+      .setURL(playing.url)
+      .setImage(playing.thumbnail)
+      .setFooter({
+        text: messageFactory.videoInfo(playing.duration, playing.viewCount, playing.age),
+      });
 
     interaction.reply({ flags: MessageFlags.Ephemeral, embeds: [embed] });
   },

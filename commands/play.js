@@ -1,5 +1,10 @@
-const { SlashCommandBuilder, MessageFlags, SectionBuilder, ButtonStyle } = require('discord.js');
-const { messageFactory, ErrorMessage } = require('../messages.js');
+const {
+  SlashCommandBuilder,
+  MessageFlags,
+  SectionBuilder,
+  ButtonStyle,
+} = require('discord.js');
+const { messageFactory } = require('../messages.js');
 const { searchYoutube, getPlaylistVideos } = require('../utils/youtube-utils.js');
 const ContentPicker = require('../classes/content-picker.js');
 
@@ -14,11 +19,14 @@ module.exports = {
       option
         .setName('type')
         .setDescription('type of content to play')
-        .addChoices({ name: 'video', value: 'video' }, { name: 'playlist', value: 'playlist' })
+        .addChoices(
+          { name: 'video', value: 'video' },
+          { name: 'playlist', value: 'playlist' }
+        )
     ),
   async execute(interaction) {
     const memberVoice = interaction.member.voice.channel;
-    if (!memberVoice) throw new ErrorMessage(messageFactory.noVoice());
+    if (!memberVoice) return messageFactory.noVoice();
 
     const input = interaction.options.getString('input');
     const contentType = interaction.options.getString('type') ?? 'video';
@@ -29,11 +37,14 @@ module.exports = {
     await deferPromise;
 
     let content;
-    if (results.length === 1) {
+    if (results.length === 0) {
+      return messageFactory.noResults(query);
+    } else if (results.length === 1) {
       content = results[0];
     } else {
       const contentPicker = new ContentPicker(input, results);
       content = await contentPicker.getChoice(interaction);
+      if (!content) return messageFactory.tooLong();
     }
 
     const userId = interaction.user.id;
@@ -44,7 +55,12 @@ module.exports = {
       messageContent = messageFactory.addVideo(userId, content.title);
     } else if (contentType === 'playlist') {
       videoArray = await getPlaylistVideos(content.id);
-      messageContent = messageFactory.addPlaylist(userId, content.videoCount, content.title);
+      if (!videoArray.length) return messageFactory.noPlaylistVideos(content.title);
+      messageContent = messageFactory.addPlaylist(
+        userId,
+        content.videoCount,
+        content.title
+      );
     }
 
     if (!audioManager.inVC(memberVoice.id)) audioManager.join(memberVoice);

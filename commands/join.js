@@ -1,20 +1,16 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { messageFactory, ErrorMessage } = require('../messages.js');
+const { messageFactory } = require('../messages.js');
 
 module.exports = {
   data: new SlashCommandBuilder().setName('join').setDescription('joins your vc'),
-  async execute(interaction) {
+  execute(interaction) {
     const memberVoice = interaction.member.voice.channel;
-    if (!memberVoice) {
-      throw new ErrorMessage(messageFactory.noVoice());
-    }
+    if (!memberVoice) return messageFactory.noVoice();
 
     const audioManager = interaction.client.audioManagerRegistry.get(interaction.guildId);
-    if (audioManager.inVC(memberVoice.id)) {
-      throw new ErrorMessage(messageFactory.alreadyInVoice());
-    }
+    if (audioManager.inVC(memberVoice.id)) return messageFactory.alreadyInVoice();
 
     audioManager.join(memberVoice);
-    interaction.reply(messageFactory.joinCall(memberVoice.id));
+    return messageFactory.joinCall(memberVoice.id);
   },
 };

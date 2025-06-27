@@ -8,19 +8,23 @@ module.exports = {
 
     const command = interaction.client.commands.get(interaction.commandName);
 
+    let message;
     try {
-      await command.execute(interaction);
+      message = await command.execute(interaction);
     } catch (error) {
       console.error(error);
+      message =
+        error instanceof ErrorMessage
+          ? error.messageObject
+          : messageFactory.genericError();
+    }
 
-      const message =
-        error instanceof ErrorMessage ? error.messageObject : messageFactory.genericError();
-
-      if (interaction.replied) {
-        interaction.editReply(message);
-      } else {
-        interaction.reply(message);
-      }
+    if (!message) {
+      return;
+    } else if (interaction.replied || interaction.deferred) {
+      interaction.editReply(message);
+    } else {
+      interaction.reply(message);
     }
   },
 };

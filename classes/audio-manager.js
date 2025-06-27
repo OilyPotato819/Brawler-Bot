@@ -1,10 +1,11 @@
-const ytdl = require('youtube-dl-exec');
+const { spawn } = require('child_process');
 const Queue = require('./queue.js');
 const {
   joinVoiceChannel,
   createAudioPlayer,
   createAudioResource,
   AudioPlayerStatus,
+  StreamType,
 } = require('@discordjs/voice');
 
 class AudioManager {
@@ -54,16 +55,29 @@ class AudioManager {
     this.connection.subscribe(this.player);
   }
 
+  skip() {
+    const skipped = this.playing;
+    this.player.stop();
+    this.playing = null;
+
+    return skipped;
+  }
+
   streamAudio(video) {
     this.playing = video;
 
-    const stream = ytdl.exec(video.url, {
-      extractAudio: true,
-      audioFormat: 'mp3',
-      output: '-',
-    });
+    const subprocess = spawn('yt-dlp', [
+      video.url,
+      '--quiet',
+      '--format',
+      'bestaudio[ext=webm][acodec=opus]',
+      '--output',
+      '-',
+    ]);
 
-    const resource = createAudioResource(stream.stdout);
+    const resource = createAudioResource(subprocess.stdout, {
+      inputType: StreamType.WebmOpus,
+    });
     this.player.play(resource);
   }
 

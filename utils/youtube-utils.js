@@ -58,7 +58,7 @@ async function searchYoutube(query, type) {
       });
 
     const items = searchResponse.data.items;
-    if (!items.length) throw new ErrorMessage(messageFactory.noResults(query));
+    if (!items.length) return [];
 
     ids = items.map((item) => item.id[`${type}Id`]);
   }
@@ -81,14 +81,13 @@ async function getPlaylistVideos(playlistId) {
         throw new ErrorMessage(messageFactory.getVideosError());
       });
 
+    pageToken = listResponse.data.nextPageToken;
     const items = listResponse.data.items;
-    if (!items.length) throw new ErrorMessage(messageFactory.emptyPlaylist());
+    if (!items.length) continue;
 
     const ids = items.map((item) => item.contentDetails.videoId);
     const newVideos = await getYoutubeInfo(ids, 'video');
     videos.push(...newVideos);
-
-    pageToken = listResponse.data.nextPageToken;
   } while (pageToken);
 
   return videos;

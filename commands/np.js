@@ -7,14 +7,10 @@ module.exports = {
     .setName('np')
     .setDescription('displays the song currently playing'),
   async execute(interaction) {
-    const playing = interaction.client.audioManagerRegistry.get(
-      interaction.guildId
-    ).playing;
+    const audioManager = interaction.client.audioManagerRegistry.get(interaction.guildId);
+    const playing = audioManager.playing;
 
-    if (!playing) {
-      interaction.reply(messageFactory.nothingPlaying());
-      return;
-    }
+    if (!playing) return messageFactory.nothingPlaying();
 
     const channel = playing.channel;
     channel.thumbnail ??= await getChannelThumbnail(channel.id);
@@ -33,6 +29,6 @@ module.exports = {
         text: messageFactory.videoInfo(playing.duration, playing.viewCount, playing.age),
       });
 
-    interaction.reply({ flags: MessageFlags.Ephemeral, embeds: [embed] });
+    return { flags: MessageFlags.Ephemeral, embeds: [embed] };
   },
 };

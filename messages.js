@@ -12,7 +12,7 @@ class ErrorMessage extends Error {
 const messageFactory = {
   addVideo: (userId, title) => `<@${userId}> added **${title}** to queue`,
   addPlaylist: (userId, videoCount, title) =>
-    `<@${userId}> added **${videoCount} videos** from **${title}** to queue`,
+    `<@${userId}> added **${videoCount}** videos from **${title}** to queue`,
   videoInfo: (duration, viewCount, age) =>
     `⌛  ${duration}   •   👁️  ${viewCount}   •   🗓️  ${age}`,
   joinCall: {
@@ -21,6 +21,26 @@ const messageFactory = {
   },
   clearedQueue: {
     content: () => 'cleared the queue',
+    ephemeral: false,
+  },
+  togglePlayback: {
+    content: (toggleState) => `${toggleState} the player`,
+    ephemeral: false,
+  },
+  skip: {
+    content: (playingTitle) => `skipped **${playingTitle}**`,
+    ephemeral: false,
+  },
+  remove: {
+    content: (skippedTitle, removeNum) => {
+      const parts = [];
+      if (skippedTitle) parts.push(`skipped **${skippedTitle}**`);
+      if (removeNum) {
+        const itemLabel = removeNum === 1 ? 'video' : 'videos';
+        parts.push(`removed **${removeNum}** ${itemLabel} from queue`);
+      }
+      return parts.join(' and ');
+    },
     ephemeral: false,
   },
   genericError: {
@@ -55,8 +75,8 @@ const messageFactory = {
     content: () => 'error getting playlist videos',
     ephemeral: true,
   },
-  emptyPlaylist: {
-    content: () => 'this playlist has no videos',
+  noPlaylistVideos: {
+    content: (playlistTitle) => `couldn't find any videos in **${playlistTitle}**`,
     ephemeral: true,
   },
   tooLong: {
@@ -69,6 +89,14 @@ const messageFactory = {
   },
   nothingPlaying: {
     content: () => 'nothing is playing right now',
+    ephemeral: true,
+  },
+  togglePlaybackError: {
+    content: () => 'unable to toggle playback',
+    ephemeral: true,
+  },
+  invalidRange: {
+    content: () => 'not a valid range',
     ephemeral: true,
   },
 };

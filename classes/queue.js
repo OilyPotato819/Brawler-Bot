@@ -12,11 +12,15 @@ class Queue {
   }
 
   clear() {
-    this.videos = [];
+    this.videos.length = 0;
   }
 
   length() {
     return this.videos.length;
+  }
+
+  remove(start, deleteCount) {
+    this.videos.splice(start, deleteCount);
   }
 }
 

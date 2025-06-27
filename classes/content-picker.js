@@ -1,4 +1,3 @@
-const { messageFactory, ErrorMessage } = require('../messages.js');
 const {
   EmbedBuilder,
   ActionRowBuilder,
@@ -38,13 +37,14 @@ class ContentPicker {
       components: [row],
     });
 
-    const selectInteraction = await message.awaitMessageComponent({ time: 60_000 }).catch(() => {
-      throw new ErrorMessage(messageFactory.tooLong());
-    });
+    const selectInteraction = await message
+      .awaitMessageComponent({ time: 60_000 })
+      .catch(() => null);
 
+    if (!selectInteraction) return null;
     selectInteraction.deferUpdate();
-
     const choiceIndex = +selectInteraction.values[0];
+
     return this.options[choiceIndex];
   }
 }

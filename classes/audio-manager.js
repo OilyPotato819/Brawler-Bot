@@ -1,5 +1,4 @@
 const { spawn } = require('child_process');
-const Queue = require('./queue.js');
 const {
   joinVoiceChannel,
   createAudioPlayer,
@@ -10,7 +9,7 @@ const {
 
 class AudioManager {
   constructor() {
-    this.queue = new Queue();
+    this.queue = [];
     this.player = createAudioPlayer();
     this.playing = null;
     this.connection = null;
@@ -19,7 +18,7 @@ class AudioManager {
 
   createListeners() {
     this.player.on(AudioPlayerStatus.Idle, () => {
-      const next = this.queue.next();
+      const next = this.queue.shift();
 
       if (next) {
         this.streamAudio(next);
@@ -33,13 +32,12 @@ class AudioManager {
     if (!videoArray.length) return;
 
     if (this.playing) {
-      this.queue.add(videoArray);
+      this.queue.push(...videoArray);
       return;
     }
 
     this.streamAudio(videoArray[0]);
-
-    if (videoArray.length > 1) this.queue.add(videoArray.slice(1));
+    if (videoArray.length > 1) this.queue.push(...videoArray.slice(1));
   }
 
   join(channel) {

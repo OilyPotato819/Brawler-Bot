@@ -1,119 +1,44 @@
-const {
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  EmbedBuilder,
-  ComponentType,
-} = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ComponentType } = require('discord.js');
 
 class QueueViewer {
-  constructor(mainInteraction, videos) {
-    this.mainInteraction = mainInteraction;
-    this.client = mainInteraction.client;
-
-    this.sendEmbed(videos);
-    this.createCollector();
+  constructor(queue) {
+    this.queue = queue;
+    this.pageSize = 10;
+    this.pageIndex = 0;
   }
 
-  sendEmbed(videos) {
-    const mainInteraction = this.mainInteraction;
-    const client = this.client;
+  createMessage() {
+    const pageOffset = this.pageIndex * this.pageSize;
+    const maxPageNum = Math.ceil(this.queue.length / this.pageSize);
+    const page = this.queue.slice(pageOffset, pageOffset + this.pageSize);
 
-    this.response = {
-      currentPage: 0,
-      actionRow: new ActionRowBuilder(),
-      fields: [],
+    const fields = page.map((queuedItem, i) => ({
+      name: ' ',
+      value: queuedItem.toQueueEntry(pageOffset + i + 1),
+    }));
 
-      updatePage: function (addend, componentIndex, limit, buttonInteraction) {
-        buttonInteraction.deferUpdate();
-        this.currentPage += addend;
+    const embed = new EmbedBuilder()
+      .setColor(0xbfda34)
+      .setTitle('Queue')
+      .setDescription(`Page ${this.pageIndex + 1}/${maxPageNum}`)
+      .addFields(fields);
 
-        if (this.currentPage === limit) {
-          this.actionRow.components[componentIndex].setDisabled();
-        }
-        this.actionRow.components[1 - componentIndex].setDisabled(false);
-
-        mainInteraction.editReply({
-          components: [this.actionRow],
-          embeds: [this.createEmbed()],
-          ephemeral: true,
-        });
-      },
-
-      createEmbed: function () {
-        return new EmbedBuilder()
-          .setColor('Orange')
-          .setTitle(`Queue`)
-          .setURL('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
-          .setAuthor({
-            name: client.user.username,
-            iconURL: client.user.avatarURL(),
-          })
-          .addFields(...this.fields[this.currentPage]);
-      },
-    };
-
-    for (let i = 0; i < videos.length; i++) {
-      if (i % 10 === 0) {
-        this.response.fields.push([]);
-      }
-
-      const video = videos[i];
-      this.response.fields[Math.floor(i / 10)].push({
-        name: ' ',
-        value: `**${i + 1}.** [${video.title}](<${video.url}>) (${
-          video.durationRaw || `${video.videoCount} videos`
-        })\n*${video.channel.name}*`,
-      });
-    }
-
-    this.response.actionRow.addComponents(
-      new ButtonBuilder()
-        .setCustomId('back')
-        .setStyle(ButtonStyle.Primary)
-        .setEmoji('◀')
-        .setDisabled()
-    );
-    this.response.actionRow.addComponents(
-      new ButtonBuilder().setCustomId('forward').setStyle(ButtonStyle.Primary).setEmoji('▶')
-    );
-
-    const replyOptions = {
-      components: [this.response.actionRow],
-      embeds: [this.response.createEmbed()],
-      ephemeral: true,
-    };
-
-    if (this.mainInteraction.replied) {
-      this.mainInteraction.editReply(replyOptions);
-    } else {
-      this.mainInteraction.reply(replyOptions);
-    }
+    return { embeds: [embed], components: [row] };
   }
 
-  async createCollector() {
-    const message = await this.mainInteraction.fetchReply();
+  displayQueue(interaction) {
+    const message = this.createMessage();
+    message.withResponse = true;
+    const response = interaction.reply(message);
 
-    this.collector = message.createMessageComponentCollector({
+    const collector = response.resource.message.createMessageComponentCollector({
       componentType: ComponentType.Button,
+      time: 5 * 60_000,
     });
 
-    this.collector.on('end', () => {
-      message.delete().catch(() => {});
-    });
-
-    this.collector.on('collect', (buttonInteraction) => {
-      const customId = buttonInteraction.customId;
-
-      if (customId == 'back') {
-        this.response.updatePage(-1, 0, 0, buttonInteraction);
-      } else if (customId == 'forward') {
-        this.response.updatePage(1, 1, this.response.fields.length - 1, buttonInteraction);
-      }
-
-      this.collector.resetTimer();
+    collector.on('collect', (interaction) => {
+      console.log(interaction);
+      //   interaction.update(this.createMessage());
     });
   }
 }
-
-module.exports = { QueueViewer };

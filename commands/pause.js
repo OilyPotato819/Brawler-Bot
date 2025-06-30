@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { messageFactory } = require('../messages.js');
+const { Message } = require('../messages.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -12,12 +12,14 @@ module.exports = {
     switch (player.state.status) {
       case 'playing':
         player.pause();
-        return messageFactory.togglePlayback('paused');
+        new Message('togglePlayback', ['paused']).send(interaction);
+        break;
       case 'paused':
         player.unpause();
-        return messageFactory.togglePlayback('unpaused');
+        new Message('togglePlayback', ['unpaused']).send(interaction);
+        break;
       default:
-        return messageFactory.togglePlaybackError();
+        new Message('togglePlaybackError').send(interaction);
     }
   },
 };

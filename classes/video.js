@@ -1,5 +1,5 @@
 const dedent = require('dedent');
-const { messageFactory } = require('../messages.js');
+const { contentTemplates } = require('../messages.js');
 const Channel = require('./channel.js');
 const { getAge, formatDuration } = require('../utils/luxon-utils');
 const formatNum = new Intl.NumberFormat('en-US', { notation: 'compact' }).format;
@@ -16,11 +16,18 @@ class Video {
     this.channel = new Channel(info);
   }
 
-  listItem(num) {
+  toSelectEntry() {
+    return dedent`
+      [⬤   ](<${this.url}>)**${this.title}**
+      ${this.channel.title}
+      ${contentTemplates.videoInfo(this.duration, this.viewCount, this.age)}
+    `;
+  }
+
+  toQueueEntry(num) {
     return dedent`
       ${num}. [${this.title}](<${this.url}>)  
-        ${this.channel.title}  
-        ${messageFactory.videoInfo(this.duration, this.viewCount, this.age)}
+        ${this.channel.title}
     `;
   }
 }

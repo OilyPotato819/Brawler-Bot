@@ -1,4 +1,4 @@
-const { messageFactory, ErrorMessage } = require('../messages.js');
+const { ErrorMessage } = require('../messages.js');
 const Video = require('../classes/video.js');
 const Playlist = require('../classes/playlist.js');
 const { google } = require('googleapis');
@@ -31,7 +31,7 @@ async function getYoutubeInfo(ids, type) {
       id: ids.join(),
     })
     .catch(() => {
-      throw new ErrorMessage(messageFactory.getInfoError(type));
+      throw new ErrorMessage('getInfoError', [type]);
     });
 
   const items = listResponse.data.items;
@@ -44,7 +44,7 @@ async function searchYoutube(query, type) {
   let ids;
   if (query.includes('youtube.com') || query.includes('youtu.be')) {
     const match = query.match(config[type].pattern);
-    if (!match) throw new ErrorMessage(messageFactory.noYoutubeId(query));
+    if (!match) throw new ErrorMessage('noYoutubeId', [query]);
     ids = [match[0]];
   } else {
     const searchResponse = await youtube.search
@@ -54,7 +54,7 @@ async function searchYoutube(query, type) {
         type: type,
       })
       .catch(() => {
-        throw new ErrorMessage(messageFactory.searchError(query));
+        throw new ErrorMessage('searchError', [query]);
       });
 
     const items = searchResponse.data.items;
@@ -78,7 +78,7 @@ async function getPlaylistVideos(playlistId) {
         pageToken,
       })
       .catch(() => {
-        throw new ErrorMessage(messageFactory.getVideosError());
+        throw new ErrorMessage('getVideosError');
       });
 
     pageToken = listResponse.data.nextPageToken;
@@ -100,7 +100,7 @@ async function getChannelThumbnail(id) {
       id,
     })
     .catch(() => {
-      throw new ErrorMessage(messageFactory.getInfoError('channel'));
+      throw new ErrorMessage('getInfoError', ['channel']);
     });
 
   const item = listResponse.data.items[0];

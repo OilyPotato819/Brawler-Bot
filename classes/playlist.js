@@ -10,11 +10,11 @@ class Playlist {
     this.channel = new Channel(info);
   }
 
-  listItem(num) {
+  toSelectEntry() {
     return dedent`
-      ${num}. [${this.title}](<${this.url}>)  
-        ${this.channel.title}  
-        ${this.videoCount} videos
+      [⬤   ](<${this.url}>)**${this.title}**
+      ${this.channel.title}
+      ${this.videoCount} videos
     `;
   }
 }

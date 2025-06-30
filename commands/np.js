@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
 const { getChannelThumbnail } = require('../utils/youtube-utils.js');
-const { messageFactory } = require('../messages.js');
+const { Message, contentTemplates } = require('../messages.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -10,7 +10,7 @@ module.exports = {
     const audioManager = interaction.client.audioManagerRegistry.get(interaction.guildId);
     const playing = audioManager.playing;
 
-    if (!playing) return messageFactory.nothingPlaying();
+    if (!playing) return new Message('nothingPlaying').send(interaction);
 
     const channel = playing.channel;
     channel.thumbnail ??= await getChannelThumbnail(channel.id);
@@ -26,9 +26,13 @@ module.exports = {
       .setURL(playing.url)
       .setImage(playing.thumbnail)
       .setFooter({
-        text: messageFactory.videoInfo(playing.duration, playing.viewCount, playing.age),
+        text: contentTemplates.videoInfo(
+          playing.duration,
+          playing.viewCount,
+          playing.age
+        ),
       });
 
-    return { flags: MessageFlags.Ephemeral, embeds: [embed] };
+    interaction.reply({ flags: MessageFlags.Ephemeral, embeds: [embed] });
   },
 };

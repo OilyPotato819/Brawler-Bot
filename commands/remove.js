@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { messageFactory } = require('../messages.js');
+const { Message } = require('../messages.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -46,12 +46,12 @@ module.exports = {
         break;
       case 'range':
         start = options.getInteger('start');
-        end = options.getInteger('end') ?? queue.length();
+        end = options.getInteger('end') ?? queue.length;
         break;
     }
 
-    if (start > end || start > queue.length() || end > queue.length()) {
-      return messageFactory.invalidRange();
+    if (start > end || start > queue.length || end > queue.length) {
+      return new Message('invalidRange').send(interaction);
     }
 
     let deleteCount = end - start + 1;
@@ -63,7 +63,7 @@ module.exports = {
       start--;
     }
 
-    queue.remove(start, deleteCount);
-    return messageFactory.remove(skipped?.title, deleteCount);
+    queue.splice(start, deleteCount);
+    new Message('remove', [skipped?.title, deleteCount]).send(interaction);
   },
 };

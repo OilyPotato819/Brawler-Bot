@@ -1,20 +1,55 @@
-const { MessageFlags } = require('discord.js');
+const { MessageFlags, TextDisplayBuilder } = require('discord.js');
 
-class ErrorMessage extends Error {
-  constructor(messageObject) {
-    super(messageObject.content);
+class Message {
+  constructor(templateName, contentArgs = []) {
+    const template = messageTemplates[templateName];
+    if (!template) throw new Error('not a valid template name');
 
-    this.name = 'ErrorMessage';
-    this.messageObject = messageObject;
+    this.content = template.content(...contentArgs);
+    this.flags = [];
+    this.embeds = [];
+    this.components = [];
+    this.allowedMentions = { parse: [] };
+
+    if (template.ephemeral) this.flags.push(MessageFlags.Ephemeral);
+  }
+
+  send(interaction) {
+    if (interaction.isComponentsV2) this.toComponentsV2();
+
+    if (interaction.replied || interaction.deferred) {
+      interaction.editReply(this);
+    } else {
+      interaction.reply(this);
+    }
+  }
+
+  toComponentsV2() {
+    this.components.push(new TextDisplayBuilder().setContent(this.content));
+    delete this.content;
+    this.flags.push(MessageFlags.IsComponentsV2);
   }
 }
 
-const messageFactory = {
+class ErrorMessage extends Error {
+  constructor(templateName, contentArgs) {
+    const message = new Message(templateName, contentArgs);
+    super(message.content);
+
+    this.name = 'ErrorMessage';
+    this.discordMessage = message;
+  }
+}
+
+const contentTemplates = {
   addVideo: (userId, title) => `<@${userId}> added **${title}** to queue`,
   addPlaylist: (userId, videoCount, title) =>
-    `<@${userId}> added **${videoCount}** videos from **${title}** to queue`,
+    `<@${userId}> added ${videoCount} videos from **${title}** to queue`,
   videoInfo: (duration, viewCount, age) =>
     `⌛  ${duration}   •   👁️  ${viewCount}   •   🗓️  ${age}`,
+};
+
+const messageTemplates = {
   joinCall: {
     content: (channelId) => `joined <#${channelId}>`,
     ephemeral: false,
@@ -37,10 +72,14 @@ const messageFactory = {
       if (skippedTitle) parts.push(`skipped **${skippedTitle}**`);
       if (removeNum) {
         const itemLabel = removeNum === 1 ? 'video' : 'videos';
-        parts.push(`removed **${removeNum}** ${itemLabel} from queue`);
+        parts.push(`removed ${removeNum} ${itemLabel} from queue`);
       }
       return parts.join(' and ');
     },
+    ephemeral: false,
+  },
+  shuffle: {
+    content: () => 'shuffled the queue',
     ephemeral: false,
   },
   genericError: {
@@ -101,17 +140,4 @@ const messageFactory = {
   },
 };
 
-for (const [key, message] of Object.entries(messageFactory)) {
-  if (typeof message !== 'object') continue;
-
-  const flags = messageFactory[key]?.ephemeral ? MessageFlags.Ephemeral : undefined;
-  messageFactory[key] = (...args) => ({
-    content: message.content(...args),
-    flags,
-    embeds: [],
-    components: [],
-    allowedMentions: { parse: [] },
-  });
-}
-
-module.exports = { messageFactory, ErrorMessage };
+module.exports = { Message, ErrorMessage, contentTemplates };

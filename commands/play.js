@@ -4,9 +4,9 @@ const {
   SectionBuilder,
   ButtonStyle,
 } = require('discord.js');
-const { messageFactory } = require('../messages.js');
+const { Message, contentTemplates } = require('../messages.js');
 const { searchYoutube, getPlaylistVideos } = require('../utils/youtube-utils.js');
-const ContentPicker = require('../classes/content-picker.js');
+const ContentSelector = require('../classes/content-selector.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -26,7 +26,7 @@ module.exports = {
     ),
   async execute(interaction) {
     const memberVoice = interaction.member.voice.channel;
-    if (!memberVoice) return messageFactory.noVoice();
+    if (!memberVoice) return new Message('noVoice').send(interaction);
 
     const input = interaction.options.getString('input');
     const contentType = interaction.options.getString('type') ?? 'video';
@@ -38,13 +38,13 @@ module.exports = {
 
     let content;
     if (results.length === 0) {
-      return messageFactory.noResults(query);
+      return new Message('noResults', [query]).send(interaction);
     } else if (results.length === 1) {
       content = results[0];
     } else {
-      const contentPicker = new ContentPicker(input, results);
-      content = await contentPicker.getChoice(interaction);
-      if (!content) return messageFactory.tooLong();
+      const contentSelector = new ContentSelector(input, results);
+      content = await contentSelector.getChoice(interaction);
+      if (!content) return new Message('tooLong').send(interaction);
     }
 
     const userId = interaction.user.id;
@@ -52,11 +52,13 @@ module.exports = {
     let messageContent;
     if (contentType === 'video') {
       videoArray = [content];
-      messageContent = messageFactory.addVideo(userId, content.title);
+      messageContent = contentTemplates.addVideo(userId, content.title);
     } else if (contentType === 'playlist') {
       videoArray = await getPlaylistVideos(content.id);
-      if (!videoArray.length) return messageFactory.noPlaylistVideos(content.title);
-      messageContent = messageFactory.addPlaylist(
+      if (!videoArray.length) {
+        return new Message('noPlaylistVideos', [content.title]).send(interaction);
+      }
+      messageContent = contentTemplates.addPlaylist(
         userId,
         content.videoCount,
         content.title
